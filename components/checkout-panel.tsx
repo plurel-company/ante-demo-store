@@ -4,20 +4,11 @@ import { AnteButton, type Cart } from "@splitante/react-sdk";
 import { useMemo, useState } from "react";
 
 import { useCart } from "@/components/cart-context";
+import { explainAnteApiError } from "@/lib/ante-env";
 import { buildAnteCart, formatUsd, makeOrderRef } from "@/lib/store";
 
 function checkoutErrorMessage(error: Error): string {
-  const message = error.message;
-  if (message.includes("Invalid cart signature") || message.includes("X-Ante-Signature")) {
-    return `${message} — Update ANTE_SIGNING_SECRET on your deployment to match Ante → Developers → Signing, then redeploy.`;
-  }
-  if (message.includes("ANTE_SIGNING_SECRET")) {
-    return message;
-  }
-  if (message.includes("Cart signing failed")) {
-    return `${message}. Check server env vars and /api/setup/status.`;
-  }
-  return message;
+  return explainAnteApiError(401, error.message);
 }
 
 export function CheckoutPanel() {

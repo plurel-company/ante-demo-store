@@ -1,5 +1,6 @@
 import type { Cart } from "@splitante/sdk";
 
+import { explainAnteApiError } from "@/lib/ante-env";
 import { createCartSignature } from "@/lib/cart-signing";
 
 const PROBE_CART: Cart = {
@@ -71,29 +72,13 @@ export async function POST() {
 
   const apiError = payload?.error ?? `Ante API error (${response.status})`;
 
-  if (apiError.includes("Invalid cart signature")) {
-    return Response.json(
-      {
-        ok: false,
-        error:
-          "Signing secret mismatch: ANTE_SIGNING_SECRET on this deployment does not match the Ante merchant dashboard. Open Developers → Signing, reveal/copy the secret, update Vercel env vars, and redeploy.",
-        detail: apiError,
-      },
-      { status: 403 },
-    );
-  }
-
-  if (response.status === 401 || apiError.includes("API key")) {
-    return Response.json(
-      {
-        ok: false,
-        error:
-          "Publishable key or merchant ID is invalid. Confirm NEXT_PUBLIC_ANTE_MERCHANT_ID and NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY from the same sandbox merchant.",
-        detail: apiError,
-      },
-      { status: 403 },
-    );
-  }
-
-  return Response.json({ ok: false, error: apiError, detail: apiError }, { status: response.status });
+  return Response.json(
+    {
+      ok: false,
+      error: explainAnteApiError(response.status, apiError),
+      detail: apiError,
+      anteStatus: response.status,
+    },
+    { status: response.status >= 500 ? 503 : 403 },
+  );
 }

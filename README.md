@@ -48,15 +48,40 @@ Register `https://YOUR_TUNNEL/api/webhooks/ante` in the merchant dashboard and s
 
 Fulfill orders on `group.funded`, not on client callbacks alone.
 
+## Troubleshooting checkout
+
+### `Invalid cart signature (X-Ante-Signature)`
+
+The store signed the cart with a different secret than Ante expects for your merchant.
+
+1. Open [Ante → Developers → Signing](https://splitante.com/merchants/integration#signing)
+2. Reveal or rotate the signing secret
+3. Set `ANTE_SIGNING_SECRET` to that exact value in Vercel (or your host) — **server env only**
+4. Redeploy (env changes do not apply until redeployed)
+5. Confirm `NEXT_PUBLIC_ANTE_MERCHANT_ID` and `NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY` are from the **same** merchant account
+
+Use **Verify Ante credentials** on the storefront, or:
+
+```bash
+curl -X POST https://YOUR_STORE/api/setup/verify
+```
+
+### `ANTE_SIGNING_SECRET is not configured`
+
+Add the server env var on your deployment. Local dev: copy `.env.example` → `.env.local`.
+
 ## Project layout
 
 ```
 app/
   page.tsx                 # Storefront
   api/cart/sign/route.ts   # Cart signing
+  api/setup/status/        # Env configuration check
+  api/setup/verify/        # Probe Ante credentials
   api/webhooks/ante/       # Webhook verification
 components/                # Cart + checkout UI
 lib/store.ts               # Products and cart helpers
+lib/cart-signing.ts        # HMAC signing (matches splitante.com)
 ```
 
 ## Deploy
