@@ -16,13 +16,9 @@ export async function GET() {
   }
 
   if (!publishableKey) {
-    issues.push("Set NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY (ante_pk_test_… sandbox key).");
+    issues.push("Set NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY (ante_pk_test_* or ante_pk_live_*).");
   } else if (!keyMode) {
-    issues.push("Publishable key should start with ante_pk_test_ (sandbox) or ante_pk_live_.");
-  } else if (keyMode === "live") {
-    issues.push(
-      "This demo expects sandbox keys (ante_pk_test_*). Live keys only work for merchants in live mode with payout setup complete.",
-    );
+    issues.push("Publishable key should start with ante_pk_test_ or ante_pk_live_.");
   }
 
   if (!signingSecret) {

@@ -17,7 +17,7 @@ export function explainAnteApiError(status: number, apiError: string): string {
   }
 
   if (apiError.includes("Invalid or revoked API key") || apiError.includes("Invalid API key format")) {
-    return "Publishable key is invalid or revoked. Create a new sandbox key in the dashboard and paste the full key (not just the prefix).";
+    return "Publishable key is invalid or revoked. Create a new key in the dashboard and paste the full value (not just the prefix).";
   }
 
   if (apiError.includes("X-Merchant-ID does not match")) {
@@ -33,7 +33,7 @@ export function explainAnteApiError(status: number, apiError: string): string {
   }
 
   if (apiError === "Unauthorized" && status === 401) {
-    return "Ante accepted your API key and cart signature, but session creation failed on splitante.com (internal auth). Ensure SHOPIFY_INTERNAL_WRITE_SECRET matches on Vercel and Convex, or redeploy ante-web after the platform fix.";
+    return "Your live API key and cart signature were accepted, but Ante failed to create the session on splitante.com (server-side internal auth). This is not a Shopify or storefront issue — merge and deploy plurel-company/ante-web PR #31, or set matching internal write secrets on the splitante.com deployment.";
   }
 
   if (status === 401) {

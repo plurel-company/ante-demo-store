@@ -94,9 +94,9 @@ export function CheckoutPanel() {
       {status ? <p className="mt-4 text-sm text-stone-600">{status}</p> : null}
 
       <p className="mt-4 text-xs leading-relaxed text-stone-400">
-        Sandbox: use card 4242 4242 4242 4242. Fulfillment should rely on the{" "}
-        <code className="rounded bg-stone-100 px-1">group.funded</code> webhook, not this
-        callback alone.
+        Use card 4242 4242 4242 4242 in test mode, or a real card in live mode. Fulfillment
+        should rely on the <code className="rounded bg-stone-100 px-1">group.funded</code>{" "}
+        webhook, not this callback alone.
       </p>
     </aside>
   );
