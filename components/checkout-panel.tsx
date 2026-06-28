@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 import { useCart } from "@/components/cart-context";
 import { explainAnteApiError } from "@/lib/ante-env";
-import { buildAnteCart, formatUsd, makeOrderRef } from "@/lib/store";
+import { buildAnteCart, formatUsd, makeOrderRef, MINIMUM_ORDER_CENTS } from "@/lib/store";
 
 function checkoutErrorMessage(error: Error): string {
   return explainAnteApiError(error.message);
@@ -20,6 +20,7 @@ export function CheckoutPanel() {
   const tax = anteCart.tax ?? 0;
   const shipping = anteCart.shipping ?? 0;
   const total = anteCart.total;
+  const belowMinimum = total > 0 && total < MINIMUM_ORDER_CENTS;
 
   async function signCart(cartToSign: Cart) {
     const response = await fetch("/api/cart/sign", {
@@ -70,11 +71,18 @@ export function CheckoutPanel() {
       </dl>
 
       <div className="mt-6">
+        {belowMinimum ? (
+          <p className="mb-3 text-sm text-amber-800">
+            Minimum order is {formatUsd(MINIMUM_ORDER_CENTS)} — add more items (current total{" "}
+            {formatUsd(total)}).
+          </p>
+        ) : null}
         <AnteButton
           getSignature={signCart}
           cart={anteCart}
           group={{ minSize: 2, maxSize: 6, defaultMode: "equal" }}
           label="Pay with Ante"
+          disabled={belowMinimum}
           className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
           callbacks={{
             onGroupCreated: (groupId) => {

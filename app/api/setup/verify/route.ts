@@ -4,9 +4,9 @@ import { explainAnteApiError } from "@/lib/ante-env";
 import { createCartSignature } from "@/lib/cart-signing";
 
 const PROBE_CART: Cart = {
-  total: 100,
+  total: 1000,
   currency: "usd",
-  items: [{ id: "probe", name: "Setup probe", quantity: 1, unit_price: 100 }],
+  items: [{ id: "probe", name: "Setup probe", quantity: 1, unit_price: 1000 }],
   metadata: { order_ref: "setup-probe" },
 };
 

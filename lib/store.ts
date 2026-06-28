@@ -8,6 +8,9 @@ export type Product = {
   emoji: string;
 };
 
+/** Ante default minimum order (matches splitante.com merchant settings). */
+export const MINIMUM_ORDER_CENTS = 1000;
+
 /** Prices in cents (USD). */
 export const PRODUCTS: Product[] = [
   {
@@ -28,7 +31,7 @@ export const PRODUCTS: Product[] = [
     id: "stickers",
     name: "Sticker Pack",
     description: "Five weatherproof vinyl stickers.",
-    unitPrice: 800,
+    unitPrice: 1200,
     emoji: "✨",
   },
 ];
