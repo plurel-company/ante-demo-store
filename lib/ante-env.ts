@@ -33,7 +33,7 @@ export function explainAnteApiError(status: number, apiError: string): string {
   }
 
   if (apiError === "Unauthorized" && status === 401) {
-    return "Your live API key and cart signature were accepted, but Ante failed to create the session on splitante.com (server-side internal auth). This is not a Shopify or storefront issue — merge and deploy plurel-company/ante-web PR #31, or set matching internal write secrets on the splitante.com deployment.";
+    return "Your API key and cart signature were accepted, but Ante failed to create the session on splitante.com (server internal auth). Set ANTE_INTERNAL_SECRET (or ANTE_INTERNAL_WRITE_SECRET) to the same value on splitante.com Vercel and Convex, then redeploy ante-web.";
   }
 
   if (status === 401) {
