@@ -30,11 +30,11 @@ Use Stripe test card `4242 4242 4242 4242` inside the Ante modal. Pay every shar
 | Variable | Where | Purpose |
 | --- | --- | --- |
 | `NEXT_PUBLIC_ANTE_MERCHANT_ID` | Client | `ante_merch_*` from dashboard |
-| `NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST` | Client | `ante_pk_test_*` for sandbox checkout |
-| `NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE` | Client | `ante_pk_live_*` for live checkout |
-| `ANTE_SIGNING_SECRET` | Server only | `ante_sign_*` for cart HMAC (shared) |
-| `ANTE_WEBHOOK_SECRET_TEST` | Server only | `whsec_*` for test webhook deliveries |
-| `ANTE_WEBHOOK_SECRET_LIVE` | Server only | `whsec_*` for live webhook deliveries |
+| `NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY` | Client | **Live** — `ante_pk_live_*` (Vercel Production/Preview) |
+| `NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST` | Client | **Test** — `ante_pk_test_*` for sandbox checkout |
+| `ANTE_SIGNING_SECRET` | Server only | `ante_sign_*` for cart HMAC (shared across modes) |
+| `ANTE_WEBHOOK_SECRET` | Server only | **Live** — `whsec_*` for live webhook deliveries |
+| `ANTE_WEBHOOK_SECRET_TEST` | Server only | **Test** — `whsec_*` for sandbox webhooks |
 
 Use the **Test / Live** switch in the store header to pick which publishable key the SDK uses. Your choice is remembered in the browser.
 

@@ -30,8 +30,8 @@ export async function GET(req: Request) {
   if (!publishableKey) {
     issues.push(
       mode === "live"
-        ? "Set NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE (ante_pk_live_*)."
-        : "Set NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST or NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY (ante_pk_test_*).",
+        ? "Set NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY or NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE (ante_pk_live_*)."
+        : "Set NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST (ante_pk_test_*).",
     );
   }
   if (!secret) {
@@ -42,8 +42,8 @@ export async function GET(req: Request) {
   if (!webhookSecret) {
     issues.push(
       mode === "live"
-        ? "Optional: set ANTE_WEBHOOK_SECRET_LIVE (whsec_…) for live group.funded events."
-        : "Optional: set ANTE_WEBHOOK_SECRET_TEST or ANTE_WEBHOOK_SECRET (whsec_…) for test webhooks.",
+        ? "Optional: set ANTE_WEBHOOK_SECRET or ANTE_WEBHOOK_SECRET_LIVE (whsec_…) for live group.funded events."
+        : "Optional: set ANTE_WEBHOOK_SECRET_TEST (whsec_…) for test webhooks.",
     );
   }
 

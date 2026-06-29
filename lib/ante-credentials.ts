@@ -8,24 +8,17 @@ export function parseAnteCredentialMode(value: string | null | undefined): AnteC
   return value?.toLowerCase() === "live" ? "live" : "sandbox";
 }
 
+/** Unqualified env vars (no _TEST suffix) are the live credentials — matches typical Vercel setup. */
 export function resolvePublishableKey(mode: AnteCredentialMode): string {
   if (mode === "live") {
     return (
       process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE?.trim() ||
-      (publishableKeyMode(process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY) === "live"
-        ? process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY?.trim()
-        : "") ||
+      process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY?.trim() ||
       ""
     );
   }
 
-  return (
-    process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST?.trim() ||
-    (publishableKeyMode(process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY) !== "live"
-      ? process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY?.trim()
-      : "") ||
-    ""
-  );
+  return process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST?.trim() || "";
 }
 
 export function resolveWebhookSecret(mode: AnteCredentialMode): string {
@@ -34,9 +27,7 @@ export function resolveWebhookSecret(mode: AnteCredentialMode): string {
       process.env.ANTE_WEBHOOK_SECRET_LIVE?.trim() || process.env.ANTE_WEBHOOK_SECRET?.trim() || ""
     );
   }
-  return (
-    process.env.ANTE_WEBHOOK_SECRET_TEST?.trim() || process.env.ANTE_WEBHOOK_SECRET?.trim() || ""
-  );
+  return process.env.ANTE_WEBHOOK_SECRET_TEST?.trim() || "";
 }
 
 /** All configured webhook secrets — used when inbound webhooks have no mode header. */
@@ -44,8 +35,8 @@ export function listWebhookSecrets(): string[] {
   const secrets = new Set<string>();
   for (const value of [
     process.env.ANTE_WEBHOOK_SECRET_TEST,
-    process.env.ANTE_WEBHOOK_SECRET,
     process.env.ANTE_WEBHOOK_SECRET_LIVE,
+    process.env.ANTE_WEBHOOK_SECRET,
   ]) {
     const trimmed = value?.trim();
     if (trimmed) secrets.add(trimmed);
@@ -57,6 +48,7 @@ export function merchantId(): string {
   return process.env.NEXT_PUBLIC_ANTE_MERCHANT_ID?.trim() ?? "";
 }
 
+/** Shared signing secret — same value for test and live checkout on one merchant. */
 export function signingSecret(): string {
   return process.env.ANTE_SIGNING_SECRET?.trim() ?? "";
 }
@@ -71,15 +63,13 @@ export function credentialAvailability(): {
 } {
   return {
     merchantId: Boolean(merchantId()),
-    testKey: Boolean(resolvePublishableKey("sandbox")),
+    testKey: Boolean(process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST?.trim()),
     liveKey: Boolean(
       process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE?.trim() ||
-        publishableKeyMode(process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY) === "live",
+        process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY?.trim(),
     ),
     signingSecret: Boolean(signingSecret()),
-    webhookTest: Boolean(
-      process.env.ANTE_WEBHOOK_SECRET_TEST?.trim() || process.env.ANTE_WEBHOOK_SECRET?.trim(),
-    ),
+    webhookTest: Boolean(process.env.ANTE_WEBHOOK_SECRET_TEST?.trim()),
     webhookLive: Boolean(
       process.env.ANTE_WEBHOOK_SECRET_LIVE?.trim() || process.env.ANTE_WEBHOOK_SECRET?.trim(),
     ),
