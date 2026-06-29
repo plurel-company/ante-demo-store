@@ -23,7 +23,8 @@ export function OrderConfirmation({ order, onContinueShopping }: OrderConfirmati
         <div>
           <h2 className="text-lg font-semibold text-emerald-950">Order confirmed</h2>
           <p className="mt-1 text-sm text-emerald-900/80">
-            Payment complete — your group checkout was funded successfully.
+            Confirmed via <code className="rounded bg-white/80 px-1">group.funded</code> webhook —
+            safe to fulfill this order.
           </p>
         </div>
       </div>
@@ -82,7 +83,7 @@ export function OrderConfirmation({ order, onContinueShopping }: OrderConfirmati
       </button>
 
       <p className="mt-4 text-xs leading-relaxed text-emerald-900/60">
-        In production, fulfill this order when your server receives the{" "}
+        This screen updated after your server verified the Ante{" "}
         <code className="rounded bg-white/80 px-1">group.funded</code> webhook.
       </p>
     </aside>

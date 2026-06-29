@@ -52,6 +52,7 @@ export type ConfirmedOrder = {
   shipping: number;
   total: number;
   confirmedAt: number;
+  confirmedVia?: "webhook";
 };
 
 export type CartState = Record<string, number>;

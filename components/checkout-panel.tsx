@@ -1,14 +1,15 @@
 "use client";
 
 import { AnteButton, type Cart } from "@splitante/react-sdk";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useCart } from "@/components/cart-context";
 import { OrderConfirmation } from "@/components/order-confirmation";
+import { useOrderFundingPoll } from "@/hooks/use-order-funding-poll";
 import { explainAnteApiError } from "@/lib/ante-env";
+import type { FundedOrder } from "@/lib/order-store";
 import {
   buildAnteCart,
-  buildCartLines,
   formatUsd,
   makeOrderRef,
   MINIMUM_ORDER_CENTS,
@@ -19,17 +20,49 @@ function checkoutErrorMessage(error: Error): string {
   return explainAnteApiError(error.message);
 }
 
+function fundedOrderToConfirmed(order: FundedOrder): ConfirmedOrder {
+  return {
+    orderRef: order.orderRef,
+    groupId: order.groupId,
+    lines: order.lines,
+    subtotal: order.subtotal,
+    tax: order.tax,
+    shipping: order.shipping,
+    total: order.totalPaid,
+    confirmedAt: order.fundedAt,
+    confirmedVia: "webhook",
+  };
+}
+
 export function CheckoutPanel() {
   const { cart, itemCount, subtotal, clearCart } = useCart();
   const [orderRef, setOrderRef] = useState(makeOrderRef);
   const [status, setStatus] = useState<string | null>(null);
   const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrder | null>(null);
+  const [pollingOrderRef, setPollingOrderRef] = useState<string | null>(null);
 
   const anteCart = useMemo(() => buildAnteCart(cart, orderRef), [cart, orderRef]);
   const tax = anteCart.tax ?? 0;
   const shipping = anteCart.shipping ?? 0;
   const total = anteCart.total;
   const belowMinimum = total > 0 && total < MINIMUM_ORDER_CENTS;
+
+  const handleWebhookFunded = useCallback(
+    (order: FundedOrder) => {
+      setConfirmedOrder(fundedOrderToConfirmed(order));
+      setPollingOrderRef(null);
+      clearCart();
+      setStatus(null);
+    },
+    [clearCart],
+  );
+
+  useOrderFundingPoll({
+    orderRef: pollingOrderRef,
+    enabled: pollingOrderRef !== null && confirmedOrder === null,
+    onFunded: handleWebhookFunded,
+    onError: (message) => setStatus(message),
+  });
 
   async function signCart(cartToSign: Cart) {
     const response = await fetch("/api/cart/sign", {
@@ -49,6 +82,7 @@ export function CheckoutPanel() {
 
   function handleContinueShopping() {
     setConfirmedOrder(null);
+    setPollingOrderRef(null);
     setOrderRef(makeOrderRef());
     setStatus(null);
   }
@@ -59,7 +93,7 @@ export function CheckoutPanel() {
     );
   }
 
-  if (itemCount === 0) {
+  if (itemCount === 0 && !pollingOrderRef) {
     return (
       <aside className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-6 text-sm text-stone-500">
         Add items to your cart to checkout with Ante group pay.
@@ -103,27 +137,15 @@ export function CheckoutPanel() {
           cart={anteCart}
           group={{ minSize: 2, maxSize: 6, defaultMode: "equal" }}
           label="Pay with Ante"
-          disabled={belowMinimum}
+          disabled={belowMinimum || pollingOrderRef !== null}
           className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
           callbacks={{
-            onGroupCreated: (groupId) => {
-              setStatus(`Group created · waiting for payment`);
-            },
-            onGroupFunded: (groupId, ref) => {
-              setConfirmedOrder({
-                orderRef: ref ?? orderRef,
-                groupId,
-                lines: buildCartLines(cart),
-                subtotal,
-                tax,
-                shipping,
-                total,
-                confirmedAt: Date.now(),
-              });
-              clearCart();
-              setStatus(null);
+            onGroupCreated: () => {
+              setPollingOrderRef(orderRef);
+              setStatus("Waiting for group.funded webhook to confirm your order…");
             },
             onError: (error) => {
+              setPollingOrderRef(null);
               setStatus(checkoutErrorMessage(error));
             },
           }}
@@ -133,9 +155,8 @@ export function CheckoutPanel() {
       {status ? <p className="mt-4 text-sm text-stone-600">{status}</p> : null}
 
       <p className="mt-4 text-xs leading-relaxed text-stone-400">
-        Use card 4242 4242 4242 4242 in test mode, or a real card in live mode. Fulfillment
-        should rely on the <code className="rounded bg-stone-100 px-1">group.funded</code>{" "}
-        webhook, not this callback alone.
+        Order confirmation appears after Ante sends <code className="rounded bg-stone-100 px-1">group.funded</code>{" "}
+        to <code className="rounded bg-stone-100 px-1">/api/webhooks/ante</code>.
       </p>
     </aside>
   );

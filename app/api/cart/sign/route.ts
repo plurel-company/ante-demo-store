@@ -1,6 +1,33 @@
 import type { Cart } from "@splitante/sdk";
 
 import { createCartSignature } from "@/lib/cart-signing";
+import { registerPendingOrder } from "@/lib/order-store";
+
+function pendingFromCart(cart: Cart) {
+  const orderRef = cart.metadata?.order_ref;
+  if (!orderRef) return null;
+
+  const lines = cart.items.map((item) => ({
+    id: item.id,
+    name: item.name,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+  }));
+
+  const subtotal = lines.reduce((sum, line) => sum + line.quantity * line.unit_price, 0);
+  const tax = cart.tax ?? 0;
+  const shipping = cart.shipping ?? 0;
+
+  return {
+    orderRef,
+    lines,
+    subtotal,
+    tax,
+    shipping,
+    total: cart.total,
+    createdAt: Date.now(),
+  };
+}
 
 export async function POST(req: Request) {
   const signingSecret = process.env.ANTE_SIGNING_SECRET?.trim();
@@ -38,6 +65,10 @@ export async function POST(req: Request) {
 
   try {
     const signature = createCartSignature(cart, signingSecret);
+    const pending = pendingFromCart(cart);
+    if (pending) {
+      registerPendingOrder(pending);
+    }
     return Response.json({ signature });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not sign cart";
