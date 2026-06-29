@@ -13,3 +13,68 @@ body {
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
+
+.ante-mode-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 5.5rem;
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    #34c759 0%,
+    #34c759 var(--slider-fill, 0%),
+    #d6d3d1 var(--slider-fill, 0%),
+    #d6d3d1 100%
+  );
+  cursor: pointer;
+  outline: none;
+}
+
+.ante-mode-slider:focus-visible {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #8b5cf6;
+  border-radius: 9999px;
+}
+
+.ante-mode-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0.5px 0 rgba(0, 0, 0, 0.04),
+    0 2px 6px rgba(0, 0, 0, 0.16),
+    0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s ease;
+}
+
+.ante-mode-slider:active::-webkit-slider-thumb {
+  transform: scale(1.06);
+}
+
+.ante-mode-slider::-moz-range-thumb {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0.5px 0 rgba(0, 0, 0, 0.04),
+    0 2px 6px rgba(0, 0, 0, 0.16),
+    0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.ante-mode-slider:active::-moz-range-thumb {
+  transform: scale(1.06);
+}
+
+.ante-mode-slider::-moz-range-track {
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: transparent;
+}
+

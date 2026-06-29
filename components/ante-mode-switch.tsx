@@ -26,31 +26,30 @@ export function AnteModeSwitch() {
   }
 
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-3">
       <span
-        className={`text-sm font-medium transition-colors ${!isLive ? "text-stone-900" : "text-stone-400"}`}
+        className={`min-w-[2rem] text-right text-xs font-semibold transition-colors ${
+          !isLive ? "text-stone-900" : "text-stone-400"
+        }`}
       >
         Test
       </span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={isLive}
-        aria-label={isLive ? "Live mode on" : "Test mode on"}
-        onClick={() => setMode(isLive ? "sandbox" : "live")}
-        className={`relative inline-flex h-8 w-[3.25rem] shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 ${
-          isLive ? "bg-green-500" : "bg-stone-300"
-        }`}
-      >
-        <span
-          aria-hidden
-          className={`pointer-events-none block h-7 w-7 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.28)] transition-transform duration-200 ease-in-out ${
-            isLive ? "translate-x-5" : "translate-x-0"
-          }`}
-        />
-      </button>
+      <input
+        type="range"
+        min={0}
+        max={1}
+        step={1}
+        value={isLive ? 1 : 0}
+        onChange={(event) => setMode(Number(event.target.value) === 1 ? "live" : "sandbox")}
+        aria-label="Ante key mode"
+        aria-valuetext={isLive ? "Live" : "Test"}
+        className="ante-mode-slider"
+        style={{ "--slider-fill": isLive ? "100%" : "0%" } as React.CSSProperties}
+      />
       <span
-        className={`text-sm font-medium transition-colors ${isLive ? "text-stone-900" : "text-stone-400"}`}
+        className={`min-w-[2rem] text-xs font-semibold transition-colors ${
+          isLive ? "text-stone-900" : "text-stone-400"
+        }`}
       >
         Live
       </span>
