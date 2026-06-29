@@ -4,8 +4,16 @@ import { AnteButton, type Cart } from "@splitante/react-sdk";
 import { useMemo, useState } from "react";
 
 import { useCart } from "@/components/cart-context";
+import { OrderConfirmation } from "@/components/order-confirmation";
 import { explainAnteApiError } from "@/lib/ante-env";
-import { buildAnteCart, formatUsd, makeOrderRef, MINIMUM_ORDER_CENTS } from "@/lib/store";
+import {
+  buildAnteCart,
+  buildCartLines,
+  formatUsd,
+  makeOrderRef,
+  MINIMUM_ORDER_CENTS,
+  type ConfirmedOrder,
+} from "@/lib/store";
 
 function checkoutErrorMessage(error: Error): string {
   return explainAnteApiError(error.message);
@@ -13,8 +21,9 @@ function checkoutErrorMessage(error: Error): string {
 
 export function CheckoutPanel() {
   const { cart, itemCount, subtotal, clearCart } = useCart();
-  const [orderRef] = useState(makeOrderRef);
+  const [orderRef, setOrderRef] = useState(makeOrderRef);
   const [status, setStatus] = useState<string | null>(null);
+  const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrder | null>(null);
 
   const anteCart = useMemo(() => buildAnteCart(cart, orderRef), [cart, orderRef]);
   const tax = anteCart.tax ?? 0;
@@ -36,6 +45,18 @@ export function CheckoutPanel() {
 
     const { signature } = (await response.json()) as { signature: string };
     return signature;
+  }
+
+  function handleContinueShopping() {
+    setConfirmedOrder(null);
+    setOrderRef(makeOrderRef());
+    setStatus(null);
+  }
+
+  if (confirmedOrder) {
+    return (
+      <OrderConfirmation order={confirmedOrder} onContinueShopping={handleContinueShopping} />
+    );
   }
 
   if (itemCount === 0) {
@@ -86,11 +107,21 @@ export function CheckoutPanel() {
           className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
           callbacks={{
             onGroupCreated: (groupId) => {
-              setStatus(`Group created · ${groupId}`);
+              setStatus(`Group created · waiting for payment`);
             },
             onGroupFunded: (groupId, ref) => {
-              setStatus(`Group funded · ${groupId} — fulfill order ${ref ?? orderRef}`);
+              setConfirmedOrder({
+                orderRef: ref ?? orderRef,
+                groupId,
+                lines: buildCartLines(cart),
+                subtotal,
+                tax,
+                shipping,
+                total,
+                confirmedAt: Date.now(),
+              });
               clearCart();
+              setStatus(null);
             },
             onError: (error) => {
               setStatus(checkoutErrorMessage(error));

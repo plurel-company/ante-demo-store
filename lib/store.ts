@@ -43,6 +43,17 @@ export type CartLine = {
   unit_price: number;
 };
 
+export type ConfirmedOrder = {
+  orderRef: string;
+  groupId: string;
+  lines: CartLine[];
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  total: number;
+  confirmedAt: number;
+};
+
 export type CartState = Record<string, number>;
 
 export function buildCartLines(cart: CartState): CartLine[] {
