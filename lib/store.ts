@@ -1,5 +1,14 @@
 import type { Cart } from "@splitante/sdk";
 
+/** Public site origin for absolute product image URLs (Ante hosted checkout). */
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+  "https://ante-demo-store.vercel.app";
+
+function productImageUrl(filename: string): string {
+  return `${SITE_URL}/products/${filename}`;
+}
+
 export type Product = {
   id: string;
   name: string;
@@ -13,7 +22,7 @@ export type Product = {
 /** Ante default minimum order (matches splitante.com merchant settings). */
 export const MINIMUM_ORDER_CENTS = 1000;
 
-/** Prices in cents (USD). Images are stable Unsplash CDN URLs. */
+/** Prices in cents (USD). Product photos live in /public/products. */
 export const PRODUCTS: Product[] = [
   {
     id: "mug",
@@ -21,8 +30,7 @@ export const PRODUCTS: Product[] = [
     description: "12 oz matte finish, dishwasher safe.",
     unitPrice: 1800,
     emoji: "☕",
-    imageUrl:
-      "https://images.unsplash.com/photo-1514228742589-6fe4aeb8fe47?auto=format&fit=crop&w=400&q=80",
+    imageUrl: productImageUrl("mug.jpg"),
   },
   {
     id: "tote",
@@ -30,8 +38,7 @@ export const PRODUCTS: Product[] = [
     description: "Heavy cotton, fits a laptop.",
     unitPrice: 2400,
     emoji: "👜",
-    imageUrl:
-      "https://images.unsplash.com/photo-1590874103328-eac13a696196?auto=format&fit=crop&w=400&q=80",
+    imageUrl: productImageUrl("tote.jpg"),
   },
   {
     id: "stickers",
@@ -39,8 +46,7 @@ export const PRODUCTS: Product[] = [
     description: "Five weatherproof vinyl stickers.",
     unitPrice: 1200,
     emoji: "✨",
-    imageUrl:
-      "https://images.unsplash.com/photo-1611532736596-ef5c63186a06?auto=format&fit=crop&w=400&q=80",
+    imageUrl: productImageUrl("stickers.jpg"),
   },
 ];
 
