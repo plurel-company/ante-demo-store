@@ -39,6 +39,7 @@ export function SetupBanner() {
         error?: string;
         message?: string;
         detail?: string;
+        details?: string[];
       };
       if (data.ok) {
         setVerifyMessage(data.message ?? "Credentials verified.");
@@ -63,7 +64,9 @@ export function SetupBanner() {
       >
         {verifying ? "Verifying…" : `Verify ${modeLabel(mode)} credentials`}
       </button>
-      {verifyMessage ? <span className="text-sm">{verifyMessage}</span> : null}
+      {verifyMessage ? (
+        <span className="whitespace-pre-line text-sm">{verifyMessage}</span>
+      ) : null}
     </div>
   );
 

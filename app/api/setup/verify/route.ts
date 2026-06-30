@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     }),
   });
 
-  let payload: { error?: string; session_id?: string } | null = null;
+  let payload: { error?: string; session_id?: string; details?: string[] } | null = null;
   try {
     payload = (await response.json()) as { error?: string; session_id?: string };
   } catch {
@@ -84,8 +84,9 @@ export async function POST(req: Request) {
   return Response.json(
     {
       ok: false,
-      error: explainAnteApiError(apiError, response.status),
+      error: explainAnteApiError(apiError, response.status, payload?.details),
       detail: apiError,
+      details: payload?.details,
       anteStatus: response.status,
     },
     { status: response.status >= 500 ? 503 : 403 },

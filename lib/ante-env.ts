@@ -17,14 +17,34 @@ export function looksLikeKeyPrefix(key: string): boolean {
   return trimmed.length > 0 && trimmed.length <= 20;
 }
 
-export function explainAnteApiError(apiError: string, status?: number): string {
+/** Mirrors splitante.com API details[] for Invalid cart signature. */
+export const INVALID_CART_SIGNATURE_HELP = [
+  "Credential: use ANTE_SIGNING_SECRET (ante_sign_… from Developers → Signing), not ante_sk_… or whsec_….",
+  "Value: paste the full secret into server env and redeploy. Dashboard rotation invalidates the old value immediately.",
+  "Canonical JSON: sign with createCartSignature from @splitante/sdk/signing (≥0.1.7). Ante always includes fees: [] in the HMAC when the cart has no custom fees.",
+  "Timing: re-sign at checkout click — cart edits after signing fail verification.",
+] as const;
+
+export function formatInvalidCartSignatureHelp(details?: string[]): string {
+  const lines = details?.length ? details : [...INVALID_CART_SIGNATURE_HELP];
+  return [
+    "Cart signature rejected. This is not always a wrong secret — check each item:",
+    ...lines.map((line) => `• ${line}`),
+  ].join("\n");
+}
+
+export function explainAnteApiError(
+  apiError: string,
+  status?: number,
+  details?: string[],
+): string {
   const message = apiError.trim();
   if (!message) {
     return "Checkout failed — try Verify Ante credentials on this page.";
   }
 
   if (message.includes("Invalid cart signature")) {
-    return "Cart signature rejected. Use ANTE_SIGNING_SECRET (ante_sign_… from Developers → Signing), not a secret API key (ante_sk_…). Paste the full value into Vercel, redeploy, and retry. If you rotated the signing secret in the dashboard, update env with the new value — rotation invalidates the old one immediately.";
+    return formatInvalidCartSignatureHelp(details);
   }
 
   if (message.includes("Invalid or revoked API key") || message.includes("Invalid API key format")) {
@@ -44,7 +64,7 @@ export function explainAnteApiError(apiError: string, status?: number): string {
   }
 
   if (message.includes("Cart total does not match") || message.includes("does not match subtotal")) {
-    return `${message} Ensure cart.total includes tax and shipping, and that line item unit_price values are in cents.`;
+    return `${message} Ensure cart.total includes tax, shipping, fees, and that line item unit_price values are in cents.`;
   }
 
   if (message.includes("Order total must be at least")) {

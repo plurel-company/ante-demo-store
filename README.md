@@ -56,13 +56,14 @@ Fulfill orders on `group.funded`, not on client callbacks alone.
 
 ### `Invalid cart signature (X-Ante-Signature)`
 
-Ante could not verify the cart HMAC. This is **not always a wrong secret** — it means the signed payload does not match what Ante expects.
+Ante returns this with a `details` array listing common causes. It does **not** always mean the signing secret is wrong.
 
-1. Use **`ANTE_SIGNING_SECRET`** (`ante_sign_…` from [Developers → Signing](https://splitante.com/merchants/integration#signing)) — **not** a secret API key (`ante_sk_…`) or webhook secret (`whsec_…`).
-2. Copy the **full** secret (reveal or rotate in the dashboard). If you rotated it, update Vercel with the **new** value.
-3. Set it as a **server-only** env var and **redeploy** (env changes do not apply until redeployed).
-4. Confirm `NEXT_PUBLIC_ANTE_MERCHANT_ID` and your publishable key are from the **same** merchant account.
-5. Run this store on **`@splitante/sdk` ≥ 0.1.7** — older signing omitted `fees` from the canonical cart JSON and fails against the current Ante API even with a correct secret.
+1. Use **`ANTE_SIGNING_SECRET`** (`ante_sign_…`) — not `ante_sk_…` or `whsec_…`.
+2. Copy the **full** secret, redeploy after env changes, and update immediately if you rotated in the dashboard.
+3. Sign with **`createCartSignature`** from `@splitante/sdk/signing` (**≥ 0.1.7**). Ante always includes `fees: []` in the HMAC when the cart has no custom fees.
+4. Re-sign at checkout click if the cart changed after signing.
+
+Docs: [Cart signing](https://splitante.com/docs/cart-signing) · [Troubleshooting](https://splitante.com/docs/troubleshooting)
 
 Use **Verify Ante credentials** on the storefront, or:
 

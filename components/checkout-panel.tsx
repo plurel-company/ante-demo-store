@@ -162,7 +162,7 @@ export function CheckoutPanel() {
         />
       </div>
 
-      {status ? <p className="mt-4 text-sm text-stone-600">{status}</p> : null}
+      {status ? <p className="mt-4 whitespace-pre-line text-sm text-stone-600">{status}</p> : null}
 
       <p className="mt-4 text-xs leading-relaxed text-stone-400">
         Checkout uses <strong>{mode === "live" ? "live" : "test"}</strong> Ante keys. Order confirmation
