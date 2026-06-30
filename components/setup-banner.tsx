@@ -13,6 +13,46 @@ type SetupStatus = {
   liveKey?: boolean;
 };
 
+function isSuccessMessage(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("verified") ||
+    lower.includes("success") ||
+    lower.includes("ok") ||
+    lower.includes("valid")
+  );
+}
+
+function VerifyMessage({ message }: { message: string }) {
+  const lines = message
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const success = isSuccessMessage(message);
+  const showChecklist = !success && lines.length > 1;
+
+  return (
+    <div
+      className={`setup-verify-message ${success ? "setup-verify-message--success" : "setup-verify-message--error"}`}
+      role="status"
+      aria-live="polite"
+    >
+      {showChecklist ? (
+        <>
+          <p className="font-medium">{lines[0]}</p>
+          <ul className="setup-verify-checklist">
+            {lines.slice(1).map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <p className="whitespace-pre-line">{message}</p>
+      )}
+    </div>
+  );
+}
+
 export function SetupBanner() {
   const { mode, modeHeaders } = useAnteMode();
   const [status, setStatus] = useState<SetupStatus | null>(null);
@@ -44,8 +84,11 @@ export function SetupBanner() {
       if (data.ok) {
         setVerifyMessage(data.message ?? "Credentials verified.");
       } else {
-        const detail = data.detail && data.detail !== data.error ? ` (${data.detail})` : "";
-        setVerifyMessage(`${data.error ?? "Verification failed."}${detail}`);
+        const parts: string[] = [];
+        if (data.error) parts.push(data.error);
+        if (data.detail && data.detail !== data.error) parts.push(data.detail);
+        if (data.details?.length) parts.push(...data.details);
+        setVerifyMessage(parts.length > 0 ? parts.join("\n") : "Verification failed.");
       }
     } catch {
       setVerifyMessage("Could not reach setup verification.");
@@ -55,18 +98,23 @@ export function SetupBanner() {
   }
 
   const verifyControl = (
-    <div className="mt-4 flex flex-wrap items-center gap-3">
+    <div className="mt-3">
       <button
         type="button"
         onClick={() => void verifyCredentials()}
         disabled={verifying}
-        className="rounded-lg bg-stone-900 px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+        className="setup-verify-btn"
       >
-        {verifying ? "Verifying…" : `Verify ${modeLabel(mode)} credentials`}
+        {verifying ? (
+          <>
+            <span className="checkout-spinner" aria-hidden />
+            Verifying…
+          </>
+        ) : (
+          `Verify ${modeLabel(mode)} credentials`
+        )}
       </button>
-      {verifyMessage ? (
-        <span className="whitespace-pre-line text-sm">{verifyMessage}</span>
-      ) : null}
+      {verifyMessage ? <VerifyMessage message={verifyMessage} /> : null}
     </div>
   );
 
@@ -76,11 +124,15 @@ export function SetupBanner() {
 
   if (status.ok) {
     return (
-      <div className="mb-6 rounded-xl border border-stone-200 bg-white px-4 py-4 text-sm text-stone-700">
-        <p>
-          {modeLabel(mode)} env looks configured
-          {status.publishableKeyLength ? ` (publishable key length: ${status.publishableKeyLength})` : ""}.
-          {status.testKey && status.liveKey ? " Both test and live keys are set — use the header switch." : null}
+      <div className="setup-banner setup-banner--ok">
+        <p className="font-medium text-stone-800">{modeLabel(mode)} environment ready</p>
+        <p className="mt-1 text-stone-600">
+          {status.publishableKeyLength
+            ? `Publishable key detected (${status.publishableKeyLength} chars).`
+            : "Keys look configured."}
+          {status.testKey && status.liveKey
+            ? " Both test and live keys are set — use the header switch."
+            : null}
         </p>
         {verifyControl}
       </div>
@@ -88,9 +140,9 @@ export function SetupBanner() {
   }
 
   return (
-    <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+    <div className="setup-banner setup-banner--warn">
       <p className="font-semibold">{modeLabel(mode)} checkout is not fully configured</p>
-      <ul className="mt-2 list-disc space-y-1 pl-5">
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-amber-900/90">
         {status.issues.map((issue) => (
           <li key={issue}>{issue}</li>
         ))}

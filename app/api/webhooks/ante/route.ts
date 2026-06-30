@@ -1,3 +1,4 @@
+/** POST /api/webhooks/ante — verify Ante webhook signature; fulfill on group.funded. */
 import { verifyWebhookSignature } from "@splitante/sdk/signing";
 
 import { listWebhookSecrets } from "@/lib/ante-credentials";

@@ -9,10 +9,12 @@ import { OrderConfirmation } from "@/components/order-confirmation";
 import { useOrderFundingPoll } from "@/hooks/use-order-funding-poll";
 import { explainAnteApiError } from "@/lib/ante-env";
 import type { FundedOrder } from "@/lib/order-store";
+import { formatUsd } from "@/components/ui/format-usd";
 import {
   buildAnteCart,
   buildCartFeeSummary,
-  formatUsd,
+  buildProductCartLines,
+  getProduct,
   makeOrderRef,
   MINIMUM_ORDER_CENTS,
   type ConfirmedOrder,
@@ -37,6 +39,15 @@ function fundedOrderToConfirmed(order: FundedOrder): ConfirmedOrder {
   };
 }
 
+function isWaitingStatus(status: string | null): boolean {
+  return status?.toLowerCase().includes("waiting") ?? false;
+}
+
+function isErrorStatus(status: string | null): boolean {
+  if (!status) return false;
+  return !isWaitingStatus(status);
+}
+
 export function CheckoutPanel() {
   const { cart, itemCount, subtotal, clearCart } = useCart();
   const { modeHeaders, mode } = useAnteMode();
@@ -45,12 +56,14 @@ export function CheckoutPanel() {
   const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrder | null>(null);
   const [pollingOrderRef, setPollingOrderRef] = useState<string | null>(null);
 
+  const cartLines = useMemo(() => buildProductCartLines(cart), [cart]);
   const anteCart = useMemo(() => buildAnteCart(cart, orderRef), [cart, orderRef]);
   const feeLines = useMemo(() => buildCartFeeSummary(cart), [cart]);
   const tax = anteCart.tax ?? 0;
   const shipping = anteCart.shipping ?? 0;
   const total = anteCart.total;
   const belowMinimum = total > 0 && total < MINIMUM_ORDER_CENTS;
+  const isWaiting = pollingOrderRef !== null || isWaitingStatus(status);
 
   const handleWebhookFunded = useCallback(
     (order: FundedOrder) => {
@@ -100,55 +113,123 @@ export function CheckoutPanel() {
 
   if (itemCount === 0 && !pollingOrderRef) {
     return (
-      <aside className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-6 text-sm text-stone-500">
-        Add items to your cart to checkout with Ante group pay.
+      <aside
+        className="checkout-panel checkout-panel--empty checkout-panel--sticky p-6"
+        aria-label="Shopping cart"
+      >
+        <div className="flex flex-col items-center text-center">
+          <span
+            className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-xl"
+            aria-hidden
+          >
+            🛒
+          </span>
+          <h2 className="text-base font-semibold text-stone-800">Your cart is empty</h2>
+          <p className="mt-1.5 max-w-[14rem] text-sm leading-relaxed text-stone-500">
+            Add items from the catalog, then split the total with Ante group pay.
+          </p>
+        </div>
       </aside>
     );
   }
 
-  return (
-    <aside className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-stone-900">Cart</h2>
-      <p className="mt-1 text-sm text-stone-500">Order {orderRef}</p>
+  const statusClass = isWaiting
+    ? "checkout-status checkout-status--waiting"
+    : isErrorStatus(status)
+      ? "checkout-status checkout-status--error"
+      : "checkout-status";
 
-      <dl className="mt-5 space-y-2 text-sm">
-        <div className="flex justify-between">
+  return (
+    <aside
+      className={`checkout-panel checkout-panel--sticky p-6 ${isWaiting ? "checkout-panel--waiting" : ""}`}
+      aria-label="Shopping cart"
+      aria-busy={isWaiting}
+    >
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight text-stone-900">Your cart</h2>
+          <p className="mt-0.5 text-xs text-stone-500">
+            {itemCount} {itemCount === 1 ? "item" : "items"} ·{" "}
+            <span className="font-mono text-stone-600">{orderRef}</span>
+          </p>
+        </div>
+        {isWaiting ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800">
+            <span className="checkout-spinner" aria-hidden />
+            Confirming
+          </span>
+        ) : null}
+      </header>
+
+      <ul className="mt-4" aria-label="Cart items">
+        {cartLines.map((line) => {
+          const product = getProduct(line.id);
+          return (
+            <li key={line.id} className="checkout-line-item">
+              {line.image_url ? (
+                <img src={line.image_url} alt="" className="checkout-line-thumb" />
+              ) : (
+                <span className="checkout-line-thumb checkout-line-thumb--placeholder" aria-hidden>
+                  {product?.emoji ?? "📦"}
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-stone-900">{line.name}</p>
+                <p className="text-xs text-stone-500">
+                  {formatUsd(line.unit_price)} × {line.quantity}
+                </p>
+              </div>
+              <span className="shrink-0 text-sm font-medium text-stone-800">
+                {formatUsd(line.quantity * line.unit_price)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+
+      <dl className="checkout-totals" aria-label="Order summary">
+        <div className="checkout-total-row">
           <dt className="text-stone-500">Subtotal</dt>
-          <dd>{formatUsd(subtotal)}</dd>
+          <dd className="text-stone-800">{formatUsd(subtotal)}</dd>
         </div>
         {feeLines.map((fee) => (
-          <div key={fee.id} className="flex justify-between">
+          <div key={fee.id} className="checkout-total-row">
             <dt className="text-stone-500">{fee.label}</dt>
-            <dd>{formatUsd(fee.amount)}</dd>
+            <dd className="text-stone-800">{formatUsd(fee.amount)}</dd>
           </div>
         ))}
-        <div className="flex justify-between">
+        <div className="checkout-total-row">
           <dt className="text-stone-500">Tax (8%)</dt>
-          <dd>{formatUsd(tax)}</dd>
+          <dd className="text-stone-800">{formatUsd(tax)}</dd>
         </div>
-        <div className="flex justify-between">
+        <div className="checkout-total-row">
           <dt className="text-stone-500">Shipping</dt>
-          <dd>{formatUsd(shipping)}</dd>
+          <dd className="text-stone-800">{formatUsd(shipping)}</dd>
         </div>
-        <div className="flex justify-between border-t border-stone-100 pt-3 text-base font-semibold">
+        <div className="checkout-total-row checkout-total-row--grand">
           <dt>Total</dt>
           <dd>{formatUsd(total)}</dd>
         </div>
       </dl>
 
-      <div className="mt-6">
-        {belowMinimum ? (
-          <p className="mb-3 text-sm text-amber-800">
-            Minimum order is {formatUsd(MINIMUM_ORDER_CENTS)} — add more items (current total{" "}
-            {formatUsd(total)}).
+      {belowMinimum ? (
+        <div className="checkout-minimum-warning mt-4" role="status">
+          <span aria-hidden>⚠️</span>
+          <p>
+            Minimum order is <strong>{formatUsd(MINIMUM_ORDER_CENTS)}</strong>. Add more items —
+            current total is {formatUsd(total)}.
           </p>
-        ) : null}
+        </div>
+      ) : null}
+
+      <div className="checkout-ante-button-wrap">
         <AnteButton
           getSignature={signCart}
           cart={anteCart}
           group={{ minSize: 2, maxSize: 6, defaultMode: "equal" }}
           disabled={belowMinimum || pollingOrderRef !== null}
-          className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          appearance={{ fullWidth: true, size: "lg" }}
+          className="!rounded-xl"
           callbacks={{
             onGroupCreated: () => {
               setPollingOrderRef(orderRef);
@@ -162,12 +243,17 @@ export function CheckoutPanel() {
         />
       </div>
 
-      {status ? <p className="mt-4 whitespace-pre-line text-sm text-stone-600">{status}</p> : null}
+      {status ? (
+        <div className={statusClass} role="status" aria-live="polite">
+          {isWaiting ? <span className="checkout-spinner" aria-hidden /> : null}
+          <p className="whitespace-pre-line">{status}</p>
+        </div>
+      ) : null}
 
-      <p className="mt-4 text-xs leading-relaxed text-stone-400">
-        Checkout uses <strong>{mode === "live" ? "live" : "test"}</strong> Ante keys. Order confirmation
-        appears after Ante sends <code className="rounded bg-stone-100 px-1">group.funded</code> to{" "}
-        <code className="rounded bg-stone-100 px-1">/api/webhooks/ante</code>.
+      <p className="checkout-footnote">
+        Checkout uses <strong>{mode === "live" ? "live" : "test"}</strong> Ante keys. Order
+        confirmation appears after Ante sends <code>group.funded</code> to{" "}
+        <code>/api/webhooks/ante</code>.
       </p>
     </aside>
   );

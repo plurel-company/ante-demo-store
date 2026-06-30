@@ -1,4 +1,7 @@
-/** Re-export SDK signing — stays aligned with splitante.com HMAC canonicalization. */
+/**
+ * Cart HMAC signing — thin re-export of @splitante/sdk/signing.
+ * Canonical JSON rules must match splitante.com; do not reimplement locally.
+ */
 export {
   canonicalizeCart,
   createCartSignature,

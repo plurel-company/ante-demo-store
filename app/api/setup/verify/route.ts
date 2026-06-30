@@ -1,3 +1,4 @@
+/** POST /api/setup/verify — probe cart signing + Ante session API without leaving an open session. */
 import type { Cart } from "@splitante/sdk";
 
 import {
@@ -18,7 +19,6 @@ const PROBE_CART: Cart = {
   metadata: { order_ref: "setup-probe" },
 };
 
-/** Signs a probe cart and checks credentials against splitante.com without leaving a session open. */
 export async function POST(req: Request) {
   const mode = parseAnteCredentialMode(req.headers.get(ANTE_KEY_MODE_HEADER));
   const id = merchantId();

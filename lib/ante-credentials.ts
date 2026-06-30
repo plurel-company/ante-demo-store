@@ -1,3 +1,4 @@
+/** Server/client env resolution for test vs live Ante credentials. */
 import { publishableKeyMode } from "@/lib/ante-env";
 
 export type AnteCredentialMode = "sandbox" | "live";

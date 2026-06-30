@@ -1,4 +1,5 @@
-import { formatUsd, type ConfirmedOrder } from "@/lib/store";
+import { formatUsd } from "@/components/ui/format-usd";
+import { getProduct, type ConfirmedOrder } from "@/lib/store";
 
 type OrderConfirmationProps = {
   order: ConfirmedOrder;
@@ -12,92 +13,101 @@ export function OrderConfirmation({ order, onContinueShopping }: OrderConfirmati
   });
 
   return (
-    <aside className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
-      <div className="flex items-start gap-3">
-        <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-lg text-white"
-          aria-hidden
-        >
-          ✓
-        </span>
-        <div>
-          <h2 className="text-lg font-semibold text-emerald-950">Order confirmed</h2>
-          <p className="mt-1 text-sm text-emerald-900/80">
-            Confirmed via <code className="rounded bg-white/80 px-1">group.funded</code> webhook —
-            safe to fulfill this order.
-          </p>
+    <aside className="order-confirmation" aria-label="Order confirmation">
+      <div className="order-confirmation__hero">
+        <div className="flex items-start gap-3">
+          <span className="order-confirmation__badge" aria-hidden>
+            ✓
+          </span>
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-emerald-950">
+              Order confirmed
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-emerald-900/80">
+              Payment verified via <code className="rounded bg-white/80 px-1 text-xs">group.funded</code>{" "}
+              webhook — safe to fulfill.
+            </p>
+          </div>
         </div>
+
+        <dl className="order-confirmation__meta text-sm">
+          <div className="flex justify-between gap-4 py-1">
+            <dt className="text-stone-500">Order ref</dt>
+            <dd className="font-mono text-xs font-medium text-stone-900">{order.orderRef}</dd>
+          </div>
+          <div className="flex justify-between gap-4 border-t border-emerald-100 py-1 pt-2">
+            <dt className="shrink-0 text-stone-500">Group ID</dt>
+            <dd className="truncate font-mono text-xs text-stone-700" title={order.groupId}>
+              {order.groupId}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-4 border-t border-emerald-100 py-1 pt-2">
+            <dt className="text-stone-500">Confirmed</dt>
+            <dd className="text-stone-700">{confirmedDate}</dd>
+          </div>
+        </dl>
       </div>
 
-      <dl className="mt-5 space-y-2 rounded-xl border border-emerald-200/80 bg-white/70 p-4 text-sm">
-        <div className="flex justify-between gap-4">
-          <dt className="text-stone-500">Order</dt>
-          <dd className="font-medium text-stone-900">{order.orderRef}</dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-stone-500">Group</dt>
-          <dd className="truncate font-mono text-xs text-stone-700">{order.groupId}</dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-stone-500">Confirmed</dt>
-          <dd className="text-stone-700">{confirmedDate}</dd>
-        </div>
-      </dl>
-
-      <ul className="mt-4 space-y-2 text-sm">
-        {order.lines.map((line) => (
-          <li key={line.id} className="flex items-center justify-between gap-4 text-stone-700">
-            <span className="flex min-w-0 items-center gap-3">
-              {line.image_url ? (
-                <img
-                  src={line.image_url}
-                  alt=""
-                  className="h-10 w-10 shrink-0 rounded-lg object-cover"
-                />
-              ) : null}
-              <span className="truncate">
-                {line.name} × {line.quantity}
+      <ul className="order-confirmation__lines" aria-label="Ordered items">
+        {order.lines.map((line) => {
+          const product = getProduct(line.id);
+          return (
+            <li key={line.id} className="order-confirmation__line">
+              <span className="flex min-w-0 items-center gap-3">
+                {line.image_url ? (
+                  <img
+                    src={line.image_url}
+                    alt=""
+                    className="checkout-line-thumb"
+                  />
+                ) : (
+                  <span className="checkout-line-thumb checkout-line-thumb--placeholder" aria-hidden>
+                    {product?.emoji ?? "📦"}
+                  </span>
+                )}
+                <span className="min-w-0">
+                  <span className="block truncate font-medium text-stone-900">{line.name}</span>
+                  <span className="text-xs text-stone-500">
+                    {formatUsd(line.unit_price)} × {line.quantity}
+                  </span>
+                </span>
               </span>
-            </span>
-            <span>{formatUsd(line.quantity * line.unit_price)}</span>
-          </li>
-        ))}
+              <span className="shrink-0 font-medium">{formatUsd(line.quantity * line.unit_price)}</span>
+            </li>
+          );
+        })}
       </ul>
 
-      <dl className="mt-4 space-y-1 border-t border-emerald-200/80 pt-4 text-sm">
-        <div className="flex justify-between">
+      <dl className="order-confirmation__totals text-sm" aria-label="Payment summary">
+        <div className="checkout-total-row">
           <dt className="text-stone-500">Subtotal</dt>
-          <dd>{formatUsd(order.subtotal)}</dd>
+          <dd className="text-stone-800">{formatUsd(order.subtotal)}</dd>
         </div>
         {order.fees?.map((fee) => (
-          <div key={fee.id} className="flex justify-between">
+          <div key={fee.id} className="checkout-total-row">
             <dt className="text-stone-500">{fee.label}</dt>
-            <dd>{formatUsd(fee.amount)}</dd>
+            <dd className="text-stone-800">{formatUsd(fee.amount)}</dd>
           </div>
         ))}
-        <div className="flex justify-between">
+        <div className="checkout-total-row">
           <dt className="text-stone-500">Tax</dt>
-          <dd>{formatUsd(order.tax)}</dd>
+          <dd className="text-stone-800">{formatUsd(order.tax)}</dd>
         </div>
-        <div className="flex justify-between">
+        <div className="checkout-total-row">
           <dt className="text-stone-500">Shipping</dt>
-          <dd>{formatUsd(order.shipping)}</dd>
+          <dd className="text-stone-800">{formatUsd(order.shipping)}</dd>
         </div>
-        <div className="flex justify-between pt-2 text-base font-semibold text-stone-900">
-          <dt>Paid</dt>
+        <div className="order-confirmation__paid">
+          <dt>Paid total</dt>
           <dd>{formatUsd(order.total)}</dd>
         </div>
       </dl>
 
-      <button
-        type="button"
-        onClick={onContinueShopping}
-        className="mt-6 w-full rounded-xl bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-800"
-      >
+      <button type="button" onClick={onContinueShopping} className="order-confirmation__cta">
         Continue shopping
       </button>
 
-      <p className="mt-4 text-xs leading-relaxed text-emerald-900/60">
+      <p className="px-6 pb-5 text-xs leading-relaxed text-emerald-900/55">
         This screen updated after your server verified the Ante{" "}
         <code className="rounded bg-white/80 px-1">group.funded</code> webhook.
       </p>

@@ -1,3 +1,4 @@
+/** GET /api/orders/[orderRef] — poll pending vs funded status (demo in-memory store). */
 import { getOrder } from "@/lib/order-store";
 
 type RouteParams = { params: Promise<{ orderRef: string }> };

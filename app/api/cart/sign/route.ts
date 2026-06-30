@@ -1,8 +1,10 @@
+/** POST /api/cart/sign — HMAC-sign cart with ANTE_SIGNING_SECRET; registers pending order. */
 import type { Cart } from "@splitante/sdk";
 
 import { createCartSignature } from "@/lib/cart-signing";
 import { registerPendingOrder } from "@/lib/order-store";
 
+/** Map signed Ante cart → in-memory pending order (keyed by metadata.order_ref). */
 function pendingFromCart(cart: Cart) {
   const orderRef = cart.metadata?.order_ref;
   if (!orderRef) return null;

@@ -17,9 +17,13 @@ export function Storefront() {
       environment={environment}
       theme="light"
     >
-      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-        <ProductGrid />
-        <CheckoutPanel />
+      <div className="grid items-start gap-8 lg:grid-cols-[1fr_360px] lg:gap-10">
+        <div className="min-w-0">
+          <ProductGrid />
+        </div>
+        <aside className="lg:sticky lg:top-8">
+          <CheckoutPanel />
+        </aside>
       </div>
     </AnteProvider>
   );

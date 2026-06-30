@@ -1,7 +1,13 @@
 {
   "name": "ante-demo-store",
   "version": "0.1.0",
+  "description": "Reference Next.js storefront for Ante group checkout — cart signing, SDK modal, and webhooks",
+  "license": "MIT",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/plurel-company/ante-demo-store.git"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

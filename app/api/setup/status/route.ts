@@ -1,3 +1,4 @@
+/** GET /api/setup/status — report env configuration for the active test/live mode. */
 import {
   credentialAvailability,
   merchantId,

@@ -1,13 +1,23 @@
 # Ante Demo Store
 
-Minimal Next.js storefront that demonstrates [Ante](https://splitante.com) group checkout with the official SDK.
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
-- Shop UI with a tiny product catalog and cart
-- Server-side cart signing (`POST /api/cart/sign`)
-- Hosted Ante checkout modal via `@splitante/react-sdk`
-- Webhook handler for `group.funded` (`POST /api/webhooks/ante`)
+**Reference implementation** for [Ante](https://splitante.com) merchants — a minimal Next.js storefront that shows cart signing, hosted group checkout, and webhook fulfillment. Copy patterns from this repo into your own stack; it is not a production e-commerce platform.
 
-Docs: https://splitante.com/docs
+Official docs: [splitante.com/docs](https://splitante.com/docs)
+
+## What this demonstrates
+
+| Flow | Implementation |
+| --- | --- |
+| Product catalog + cart | `lib/catalog.ts`, `lib/cart.ts`, React context |
+| Server-side cart signing | `POST /api/cart/sign` with `@splitante/sdk/signing` |
+| Hosted checkout modal | `@splitante/react-sdk` (`AnteButton`) |
+| Test vs live credentials | Header switch + `lib/ante-credentials.ts` |
+| Order fulfillment | `POST /api/webhooks/ante` on `group.funded` |
+| Setup diagnostics | `GET /api/setup/status`, `POST /api/setup/verify` |
 
 ## Quick start
 
@@ -15,15 +25,29 @@ Docs: https://splitante.com/docs
 cp .env.example .env.local
 # Add credentials from the Ante merchant dashboard (Developers tab)
 
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-Open http://localhost:3000, add items, and click **Pay with Ante**.
+Open [http://localhost:3000](http://localhost:3000), add items, and click **Pay with Ante**.
 
 ### Sandbox test card
 
 Use Stripe test card `4242 4242 4242 4242` inside the Ante modal. Pay every share to trigger `group.funded`.
+
+## Architecture
+
+```
+Browser                         Next.js server                    Ante (splitante.com)
+───────                         ──────────────                    ────────────────────
+Cart state ──► buildAnteCart ──► POST /api/cart/sign ──► HMAC ──► AnteButton opens modal
+                     │                    │                              │
+                     │                    └── registerPendingOrder       │
+                     │                                                       │
+Webhook poll ◄── GET /api/orders/[ref] ◄── markOrderFunded ◄── POST /api/webhooks/ante
+```
+
+**Fulfill on `group.funded`**, not on client callbacks alone. The demo uses an in-memory order store (`lib/order-store.ts`) — replace with your database in production.
 
 ## Environment variables
 
@@ -32,13 +56,18 @@ Use Stripe test card `4242 4242 4242 4242` inside the Ante modal. Pay every shar
 | `NEXT_PUBLIC_ANTE_MERCHANT_ID` | Client | `ante_merch_*` from dashboard |
 | `NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY` | Client | **Live** — `ante_pk_live_*` (Vercel Production/Preview) |
 | `NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST` | Client | **Test** — `ante_pk_test_*` for sandbox checkout |
+| `NEXT_PUBLIC_SITE_URL` | Client | Origin for absolute product image URLs |
 | `ANTE_SIGNING_SECRET` | Server only | `ante_sign_*` for cart HMAC (shared across modes) |
 | `ANTE_WEBHOOK_SECRET` | Server only | **Live** — `whsec_*` for live webhook deliveries |
 | `ANTE_WEBHOOK_SECRET_TEST` | Server only | **Test** — `whsec_*` for sandbox webhooks |
 
+Optional aliases: `NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE`, `ANTE_WEBHOOK_SECRET_LIVE`.
+
 Use the **Test / Live** switch in the store header to pick which publishable key the SDK uses. Your choice is remembered in the browser.
 
-Never commit real secrets. Never put signing or secret keys in client code.
+Never commit real secrets. Never put signing or webhook secrets in client code.
+
+See [`.env.example`](./.env.example) for commented templates.
 
 ## Webhooks (local dev)
 
@@ -49,8 +78,6 @@ ngrok http 3000
 ```
 
 Register `https://YOUR_TUNNEL/api/webhooks/ante` in the merchant dashboard and subscribe to `group.funded`.
-
-Fulfill orders on `group.funded`, not on client callbacks alone.
 
 ## Troubleshooting checkout
 
@@ -68,7 +95,8 @@ Docs: [Cart signing](https://splitante.com/docs/cart-signing) · [Troubleshootin
 Use **Verify Ante credentials** on the storefront, or:
 
 ```bash
-curl -X POST https://YOUR_STORE/api/setup/verify
+curl -X POST http://localhost:3000/api/setup/verify \
+  -H "x-ante-key-mode: sandbox"
 ```
 
 ### `ANTE_SIGNING_SECRET is not configured`
@@ -79,19 +107,42 @@ Add the server env var on your deployment. Local dev: copy `.env.example` → `.
 
 ```
 app/
-  page.tsx                 # Storefront
-  api/cart/sign/route.ts   # Cart signing
-  api/setup/status/        # Env configuration check
-  api/setup/verify/        # Probe Ante credentials
-  api/webhooks/ante/       # Webhook verification
-components/                # Cart + checkout UI
-lib/store.ts               # Products and cart helpers
-lib/cart-signing.ts        # HMAC signing (matches splitante.com)
+  page.tsx                      # Storefront shell + credential gate
+  api/cart/sign/route.ts        # Cart HMAC signing
+  api/setup/status/route.ts     # Env configuration check
+  api/setup/verify/route.ts     # Probe Ante credentials
+  api/webhooks/ante/route.ts    # Webhook verification + fulfillment
+  api/orders/[orderRef]/route.ts # Order status polling
+components/
+  ui/format-usd.ts              # Shared USD display helper
+  store/                        # Product cards (UI agents)
+lib/
+  types.ts                      # Shared TypeScript types
+  catalog.ts                    # Demo product catalog
+  cart.ts                       # Cart → Ante payload builders
+  store.ts                      # Barrel re-export
+  cart-signing.ts               # SDK signing re-export
+  ante-credentials.ts           # Test/live env resolution
+  ante-env.ts                   # Key parsing + error messages
+  order-store.ts                # In-memory pending/funded orders
+hooks/use-order-funding-poll.ts  # Poll until webhook marks funded
 ```
+
+## Scripts
+
+| Command | Description |
+| --- | --- |
+| `pnpm dev` | Start Next.js dev server |
+| `pnpm build` | Production build |
+| `pnpm typecheck` | `tsc --noEmit` |
 
 ## Deploy
 
 Works on Vercel or any Node 20+ host. Set the same env vars in your deployment dashboard.
+
+## Contributing
+
+This is a reference implementation — PRs that improve integration clarity and docs are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Links
 

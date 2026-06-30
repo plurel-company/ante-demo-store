@@ -1,4 +1,5 @@
-import type { CartLine } from "@/lib/store";
+/** In-memory order ledger for demo fulfillment (pending → funded via webhook). */
+import type { CartLine } from "@/lib/types";
 
 export type OrderFee = {
   id: string;

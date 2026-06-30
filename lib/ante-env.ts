@@ -1,3 +1,4 @@
+/** Publishable-key parsing and user-facing Ante API error messages. */
 export type AnteKeyMode = "sandbox" | "live" | null;
 
 export function publishableKeyMode(key: string | undefined): AnteKeyMode {

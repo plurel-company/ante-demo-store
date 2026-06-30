@@ -6,9 +6,7 @@ function ModeBadge({ mode }: { mode: "sandbox" | "live" }) {
   const isLive = mode === "live";
   return (
     <span
-      className={`rounded-full px-3 py-1 text-sm font-medium ${
-        isLive ? "bg-violet-100 text-violet-900" : "bg-sky-100 text-sky-900"
-      }`}
+      className={`ante-mode-badge ${isLive ? "ante-mode-badge--live" : "ante-mode-badge--sandbox"}`}
     >
       {modeLabel(mode)} only
     </span>
@@ -26,11 +24,9 @@ export function AnteModeSwitch() {
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="ante-mode-switch">
       <span
-        className={`min-w-[2rem] text-right text-xs font-semibold transition-colors ${
-          !isLive ? "text-stone-900" : "text-stone-400"
-        }`}
+        className={`ante-mode-label text-right ${!isLive ? "ante-mode-label--active" : "ante-mode-label--inactive"}`}
       >
         Test
       </span>
@@ -47,9 +43,7 @@ export function AnteModeSwitch() {
         style={{ "--slider-fill": isLive ? "100%" : "0%" } as React.CSSProperties}
       />
       <span
-        className={`min-w-[2rem] text-xs font-semibold transition-colors ${
-          isLive ? "text-stone-900" : "text-stone-400"
-        }`}
+        className={`ante-mode-label ${isLive ? "ante-mode-label--active" : "ante-mode-label--inactive"}`}
       >
         Live
       </span>
