@@ -49,7 +49,7 @@ export function explainAnteApiError(
   }
 
   if (message.includes("Invalid or revoked API key") || message.includes("Invalid API key format")) {
-    return "The demo's sandbox key is being rotated — group checkout is temporarily offline. Browsing, carts, and totals all still work.";
+    return "Publishable key is invalid or revoked. Paste the full key from the dashboard when it was created (not the prefix shown later).";
   }
 
   if (
