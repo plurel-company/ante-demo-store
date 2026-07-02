@@ -21,7 +21,7 @@ export function ProductGrid() {
         </div>
       ) : null}
 
-      {PRODUCT_SECTIONS.map((section) => {
+      {PRODUCT_SECTIONS.map((section, sectionIndex) => {
         const currencyGroups = productsByCurrencyInCategory(section.id);
         const isLodging = section.id === "lodging";
         const productCount = currencyGroups.reduce((sum, group) => sum + group.products.length, 0);
@@ -30,6 +30,7 @@ export function ProductGrid() {
           <section key={section.id} aria-labelledby={`section-${section.id}`}>
             <SectionHeader
               id={`section-${section.id}`}
+              index={String(sectionIndex + 1).padStart(2, "0")}
               title={section.title}
               subtitle={section.subtitle}
               count={productCount}

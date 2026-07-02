@@ -21,7 +21,7 @@ export function Storefront() {
         <div className="min-w-0">
           <ProductGrid />
         </div>
-        <aside className="lg:sticky lg:top-8">
+        <aside className="lg:sticky lg:top-[84px]">
           <CheckoutPanel />
         </aside>
       </div>
