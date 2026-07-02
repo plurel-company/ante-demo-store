@@ -1,8 +1,9 @@
 "use client";
 
 import { useCart } from "@/components/cart-context";
+import { CurrencyBadge } from "@/components/store/CurrencyBadge";
 import { QuantityStepper } from "@/components/store/QuantityStepper";
-import { formatUsd } from "@/components/ui/format-usd";
+import { formatMoney } from "@/components/ui/format-money";
 import { type Product } from "@/lib/store";
 
 type ShopProductCardProps = {
@@ -10,22 +11,28 @@ type ShopProductCardProps = {
 };
 
 export function ShopProductCard({ product }: ShopProductCardProps) {
-  const { cart, addItem, removeItem } = useCart();
+  const { cart, addItem, removeItem, currency: cartCurrency } = useCart();
   const quantity = cart[product.id] ?? 0;
+  const lockedOut = cartCurrency !== null && cartCurrency !== product.currency;
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm transition hover:border-stone-300 hover:shadow-md">
-      <div className="relative aspect-[4/5] overflow-hidden bg-stone-100">
+    <article
+      className={`product-card group flex flex-col overflow-hidden ${lockedOut ? "product-card--muted" : ""}`}
+    >
+      <div className="product-card__media relative aspect-[4/5] overflow-hidden">
         <img
           src={product.imageUrl}
           alt={product.name}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
         />
-        {quantity > 0 ? (
-          <span className="absolute left-3 top-3 rounded-full bg-stone-900/90 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
-            {quantity} in cart
-          </span>
-        ) : null}
+        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+          <CurrencyBadge currency={product.currency} />
+          {quantity > 0 ? (
+            <span className="rounded-full bg-stone-900/90 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+              {quantity} in cart
+            </span>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col p-4 sm:p-5">
@@ -36,7 +43,7 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
               {product.description}
             </p>
           </div>
-          <span className="text-lg opacity-40" aria-hidden>
+          <span className="text-lg opacity-35 transition group-hover:opacity-50" aria-hidden>
             {product.emoji}
           </span>
         </div>
@@ -44,7 +51,7 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
         <div className="mt-auto pt-5">
           <div className="flex items-end justify-between gap-4">
             <p className="text-lg font-semibold tracking-tight text-stone-900">
-              {formatUsd(product.unitPrice)}
+              {formatMoney(product.unitPrice, product.currency)}
             </p>
             <QuantityStepper
               quantity={quantity}
@@ -53,6 +60,7 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
               onRemove={() => removeItem(product.id)}
               productName={product.name}
               size="sm"
+              disabled={lockedOut && quantity === 0}
             />
           </div>
         </div>

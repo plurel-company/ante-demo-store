@@ -1,5 +1,7 @@
 import type { Cart } from "@splitante/sdk";
 
+import type { CurrencyCode } from "@/lib/currency";
+
 /** Demo catalog categories — shop (physical goods) vs lodging (nightly stays). */
 export type ProductCategory = "shop" | "lodging";
 
@@ -24,7 +26,9 @@ export type Product = {
   id: string;
   name: string;
   description: string;
+  /** Price in minor units (cents for USD/EUR/GBP; whole yen for JPY). */
   unitPrice: number;
+  currency: CurrencyCode;
   emoji: string;
   category: ProductCategory;
   /** Absolute HTTPS URL — Ante hosted checkout loads this cross-origin. */
@@ -52,6 +56,7 @@ export type CartFeeLine = {
 export type ConfirmedOrder = {
   orderRef: string;
   groupId: string;
+  currency: CurrencyCode;
   lines: CartLine[];
   fees?: CartFeeLine[];
   subtotal: number;

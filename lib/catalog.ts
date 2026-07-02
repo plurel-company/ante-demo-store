@@ -1,3 +1,5 @@
+import type { CurrencyCode } from "@/lib/currency";
+import { CURRENCY_ORDER, getMinimumOrderMinor } from "@/lib/currency";
 import type { Product, ProductCategory } from "@/lib/types";
 
 /** Public site origin for absolute product image URLs (Ante hosted checkout). */
@@ -9,14 +11,14 @@ function productImageUrl(filename: string): string {
   return `${SITE_URL}/products/${filename}`;
 }
 
-/** Ante default minimum order (matches splitante.com merchant settings). */
-export const MINIMUM_ORDER_CENTS = 1000;
+/** Ante default minimum order for USD (matches splitante.com merchant settings). */
+export const MINIMUM_ORDER_CENTS = getMinimumOrderMinor("USD");
 
 export const PRODUCT_SECTIONS: { id: ProductCategory; title: string; subtitle: string }[] = [
   {
     id: "shop",
     title: "Shop",
-    subtitle: "Physical goods with flat-rate shipping.",
+    subtitle: "Physical goods with flat-rate shipping — prices in local currency.",
   },
   {
     id: "lodging",
@@ -25,13 +27,14 @@ export const PRODUCT_SECTIONS: { id: ProductCategory; title: string; subtitle: s
   },
 ];
 
-/** Prices in cents (USD). Product photos live in /public/products. */
+/** Prices in minor units per currency. Product photos live in /public/products. */
 export const PRODUCTS: Product[] = [
   {
     id: "mug",
     name: "Ceramic Mug",
     description: "12 oz matte finish, dishwasher safe.",
     unitPrice: 1800,
+    currency: "USD",
     emoji: "☕",
     category: "shop",
     imageUrl: productImageUrl("mug.jpg"),
@@ -40,7 +43,8 @@ export const PRODUCTS: Product[] = [
     id: "tote",
     name: "Canvas Tote",
     description: "Heavy cotton, fits a laptop.",
-    unitPrice: 2400,
+    unitPrice: 2200,
+    currency: "EUR",
     emoji: "👜",
     category: "shop",
     imageUrl: productImageUrl("tote.jpg"),
@@ -49,7 +53,8 @@ export const PRODUCTS: Product[] = [
     id: "stickers",
     name: "Sticker Pack",
     description: "Five weatherproof vinyl stickers.",
-    unitPrice: 1200,
+    unitPrice: 950,
+    currency: "GBP",
     emoji: "✨",
     category: "shop",
     imageUrl: productImageUrl("stickers.jpg"),
@@ -59,6 +64,7 @@ export const PRODUCTS: Product[] = [
     name: "Deluxe Penthouse Suite",
     description: "Corner suite with skyline views, lounge access, and in-room dining.",
     unitPrice: 48900,
+    currency: "USD",
     emoji: "🏨",
     category: "lodging",
     imageUrl: productImageUrl("deluxe-suite.jpg"),
@@ -78,7 +84,8 @@ export const PRODUCTS: Product[] = [
     id: "hotel-room",
     name: "Classic Hotel Room",
     description: "Quiet queen room on a lower floor — ideal for solo travelers or couples.",
-    unitPrice: 14900,
+    unitPrice: 13500,
+    currency: "EUR",
     emoji: "🛏️",
     category: "lodging",
     imageUrl: productImageUrl("hotel-room.jpg"),
@@ -89,13 +96,14 @@ export const PRODUCTS: Product[] = [
       sqft: "280 sq ft",
       amenities: ["Desk + ergonomic chair", "Mini fridge", "Blackout shades", "Walk-in shower"],
     },
-    fees: [{ id: "resort", label: "Resort fee", amount: 3500, billing: "per_night" }],
+    fees: [{ id: "resort", label: "Resort fee", amount: 3200, billing: "per_night" }],
   },
   {
     id: "compound-house",
     name: "Cedar Compound Retreat",
     description: "Airbnb-style estate — main lodge plus two guest cottages on five acres.",
-    unitPrice: 185000,
+    unitPrice: 268000,
+    currency: "JPY",
     emoji: "🏡",
     category: "lodging",
     imageUrl: productImageUrl("compound-house.jpg"),
@@ -121,4 +129,17 @@ export function getProduct(id: string): Product | undefined {
 
 export function productsInCategory(category: ProductCategory): Product[] {
   return PRODUCTS.filter((product) => product.category === category);
+}
+
+/** Products in a category grouped by currency (stable order). */
+export function productsByCurrencyInCategory(
+  category: ProductCategory,
+): { currency: CurrencyCode; products: Product[] }[] {
+  const inCategory = productsInCategory(category);
+  return CURRENCY_ORDER.filter((currency) =>
+    inCategory.some((product) => product.currency === currency),
+  ).map((currency) => ({
+    currency,
+    products: inCategory.filter((product) => product.currency === currency),
+  }));
 }

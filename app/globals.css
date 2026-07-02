@@ -1,11 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --store-bg: #fafaf9;
+  --store-bg: #fdf8f4;
+  --store-bg-accent: #fff7ed;
   --store-surface: #ffffff;
   --store-border: rgb(231 229 228 / 0.85);
   --store-muted: #78716c;
   --store-accent: #059669;
+  --store-peach: #fdba74;
+  --store-peach-soft: #ffedd5;
   --checkout-surface: #ffffff;
   --checkout-muted: #78716c;
   --checkout-border: #e7e5e4;
@@ -27,7 +30,97 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-  background-color: var(--store-bg);
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -20%, var(--store-peach-soft) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgb(254 243 199 / 0.35) 0%, transparent 50%),
+    var(--store-bg);
+  color: #1c1917;
+}
+
+/* ── Store layout & catalog ─────────────────────────────────────── */
+
+.section-header__title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #1c1917;
+  line-height: 1.15;
+}
+
+.currency-subheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgb(231 229 228 / 0.7);
+}
+
+.product-card {
+  border: 1px solid rgb(231 229 228 / 0.9);
+  background: var(--store-surface);
+  border-radius: 1.25rem;
+  box-shadow:
+    0 1px 2px rgba(28, 25, 23, 0.03),
+    0 4px 20px rgba(251, 146, 60, 0.04);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.product-card:hover {
+  border-color: rgb(253 186 116 / 0.55);
+  box-shadow:
+    0 4px 12px rgba(28, 25, 23, 0.06),
+    0 12px 32px rgba(251, 146, 60, 0.1);
+  transform: translateY(-2px);
+}
+
+.product-card--muted {
+  opacity: 0.72;
+  filter: saturate(0.85);
+}
+
+.product-card--muted:hover {
+  transform: none;
+  box-shadow:
+    0 1px 2px rgba(28, 25, 23, 0.03),
+    0 4px 20px rgba(251, 146, 60, 0.04);
+}
+
+.product-card__media {
+  background: linear-gradient(145deg, #f5f5f4 0%, #ffedd5 100%);
+}
+
+.cart-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid #fcd34d;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffedd5 100%);
+  color: #92400e;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.cart-notice__dismiss {
+  flex-shrink: 0;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #78350f;
+  background: rgb(255 255 255 / 0.7);
+  transition: background-color 0.15s ease;
+}
+
+.cart-notice__dismiss:hover {
+  background: #ffffff;
 }
 
 code {
@@ -36,13 +129,29 @@ code {
 
 /* ── Checkout panel ─────────────────────────────────────────────── */
 
+.store-hero {
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgb(231 229 228 / 0.75);
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.55) 0%,
+    rgb(255 255 255 / 0) 100%
+  );
+  border-radius: 0 0 1.5rem 1.5rem;
+  margin-left: -0.25rem;
+  margin-right: -0.25rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+
 .checkout-panel {
   border: 1px solid var(--checkout-border);
-  background: var(--checkout-surface);
-  border-radius: 1rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fffbf7 100%);
+  border-radius: 1.25rem;
   box-shadow:
     0 1px 2px rgba(28, 25, 23, 0.04),
-    0 4px 16px rgba(28, 25, 23, 0.06);
+    0 8px 28px rgba(251, 146, 60, 0.08);
 }
 
 .checkout-panel--empty {

@@ -1,7 +1,29 @@
 import type { CartFee } from "@splitante/sdk";
 
 import { PRODUCTS } from "@/lib/catalog";
+import {
+  anteCurrencyCode,
+  CURRENCY_META,
+  type CurrencyCode,
+  getMinimumOrderMinor,
+} from "@/lib/currency";
 import type { AnteCart, CartFeeLine, CartLine, CartState } from "@/lib/types";
+
+export function getCartCurrency(cart: CartState): CurrencyCode | null {
+  for (const product of PRODUCTS) {
+    if ((cart[product.id] ?? 0) > 0) {
+      return product.currency;
+    }
+  }
+  return null;
+}
+
+export function wouldMixCartCurrency(cart: CartState, productId: string): boolean {
+  const product = PRODUCTS.find((entry) => entry.id === productId);
+  const cartCurrency = getCartCurrency(cart);
+  if (!product || !cartCurrency) return false;
+  return product.currency !== cartCurrency;
+}
 
 export function buildProductCartLines(cart: CartState): CartLine[] {
   return PRODUCTS.filter((product) => (cart[product.id] ?? 0) > 0).map((product) => ({
@@ -63,21 +85,37 @@ export function makeOrderRef(): string {
 }
 
 /** Build the signed cart payload for Ante checkout (tax/shipping are demo approximations). */
-export function buildAnteCart(cart: CartState, orderRef: string): AnteCart {
+export function buildAnteCart(cart: CartState, orderRef: string): AnteCart | null {
+  const currency = getCartCurrency(cart);
+  if (!currency) return null;
+
   const items = buildProductCartLines(cart);
   const fees = buildCartFees(cart);
   const feesTotal = fees.reduce((sum, fee) => sum + fee.amount, 0);
   const merchandiseSubtotal = cartSubtotal(cart);
   const tax = Math.round(merchandiseSubtotal * 0.08);
-  const shipping = cartHasShopItems(cart) ? 500 : 0;
+  const shipping = cartHasShopItems(cart) ? CURRENCY_META[currency].shopShippingMinor : 0;
 
   return {
     total: merchandiseSubtotal + tax + shipping + feesTotal,
-    currency: "usd",
+    currency: anteCurrencyCode(currency),
     items,
     tax,
     shipping,
     ...(fees.length > 0 ? { fees } : {}),
     metadata: { order_ref: orderRef },
   };
+}
+
+export function cartMeetsMinimum(cart: CartState): boolean {
+  const currency = getCartCurrency(cart);
+  if (!currency) return true;
+  const anteCart = buildAnteCart(cart, "preview");
+  if (!anteCart) return true;
+  return anteCart.total >= getMinimumOrderMinor(currency);
+}
+
+export function minimumOrderForCart(cart: CartState): number {
+  const currency = getCartCurrency(cart);
+  return currency ? getMinimumOrderMinor(currency) : getMinimumOrderMinor("USD");
 }

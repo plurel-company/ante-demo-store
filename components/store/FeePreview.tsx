@@ -1,12 +1,14 @@
-import { formatUsd } from "@/components/ui/format-usd";
+import { formatMoney } from "@/components/ui/format-money";
+import { type CurrencyCode } from "@/lib/currency";
 import { type ProductFee } from "@/lib/store";
 
 type FeePreviewProps = {
   fees: ProductFee[];
+  currency: CurrencyCode;
   compact?: boolean;
 };
 
-export function FeePreview({ fees, compact = false }: FeePreviewProps) {
+export function FeePreview({ fees, currency, compact = false }: FeePreviewProps) {
   if (!fees.length) return null;
 
   return (
@@ -14,7 +16,7 @@ export function FeePreview({ fees, compact = false }: FeePreviewProps) {
       className={
         compact
           ? "mt-3 rounded-lg bg-stone-50 px-3 py-2.5"
-          : "mt-4 rounded-xl border border-stone-100 bg-stone-50/80 px-3.5 py-3"
+          : "mt-4 rounded-xl border border-stone-100 bg-gradient-to-br from-stone-50 to-orange-50/40 px-3.5 py-3"
       }
     >
       <p className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
@@ -25,7 +27,7 @@ export function FeePreview({ fees, compact = false }: FeePreviewProps) {
           <li key={fee.id} className="flex justify-between gap-3 text-xs text-stone-600">
             <span className="truncate">{fee.label}</span>
             <span className="shrink-0 font-medium text-stone-700">
-              {formatUsd(fee.amount)}
+              {formatMoney(fee.amount, currency)}
               <span className="font-normal text-stone-400">
                 {fee.billing === "per_night" ? " / night" : " / stay"}
               </span>

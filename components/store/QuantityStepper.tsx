@@ -5,6 +5,7 @@ type QuantityStepperProps = {
   onRemove: () => void;
   productName: string;
   size?: "sm" | "md";
+  disabled?: boolean;
 };
 
 export function QuantityStepper({
@@ -14,6 +15,7 @@ export function QuantityStepper({
   onRemove,
   productName,
   size = "md",
+  disabled = false,
 }: QuantityStepperProps) {
   const plural = quantity === 1 ? unitLabel : `${unitLabel}s`;
   const buttonSize = size === "sm" ? "h-8 w-8 text-sm" : "h-9 w-9";
@@ -41,7 +43,8 @@ export function QuantityStepper({
       <button
         type="button"
         onClick={onAdd}
-        className={`${buttonSize} flex shrink-0 items-center justify-center rounded-full bg-stone-900 text-white shadow-sm transition hover:bg-stone-800`}
+        disabled={disabled}
+        className={`${buttonSize} flex shrink-0 items-center justify-center rounded-full bg-stone-900 text-white shadow-sm transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-40`}
         aria-label={`Add one ${unitLabel} at ${productName}`}
       >
         +

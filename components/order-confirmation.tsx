@@ -1,4 +1,5 @@
-import { formatUsd } from "@/components/ui/format-usd";
+import { formatMoney } from "@/components/ui/format-money";
+import { CurrencyBadge } from "@/components/store/CurrencyBadge";
 import { getProduct, type ConfirmedOrder } from "@/lib/store";
 
 type OrderConfirmationProps = {
@@ -12,6 +13,8 @@ export function OrderConfirmation({ order, onContinueShopping }: OrderConfirmati
     timeStyle: "short",
   });
 
+  const format = (minorUnits: number) => formatMoney(minorUnits, order.currency);
+
   return (
     <aside className="order-confirmation" aria-label="Order confirmation">
       <div className="order-confirmation__hero">
@@ -20,9 +23,12 @@ export function OrderConfirmation({ order, onContinueShopping }: OrderConfirmati
             ✓
           </span>
           <div>
-            <h2 className="text-lg font-semibold tracking-tight text-emerald-950">
-              Order confirmed
-            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-lg font-semibold tracking-tight text-emerald-950">
+                Order confirmed
+              </h2>
+              <CurrencyBadge currency={order.currency} size="md" />
+            </div>
             <p className="mt-1 text-sm leading-relaxed text-emerald-900/80">
               {order.confirmedVia === "sdk" ? (
                 <>
@@ -65,11 +71,7 @@ export function OrderConfirmation({ order, onContinueShopping }: OrderConfirmati
             <li key={line.id} className="order-confirmation__line">
               <span className="flex min-w-0 items-center gap-3">
                 {line.image_url ? (
-                  <img
-                    src={line.image_url}
-                    alt=""
-                    className="checkout-line-thumb"
-                  />
+                  <img src={line.image_url} alt="" className="checkout-line-thumb" />
                 ) : (
                   <span className="checkout-line-thumb checkout-line-thumb--placeholder" aria-hidden>
                     {product?.emoji ?? "📦"}
@@ -78,11 +80,13 @@ export function OrderConfirmation({ order, onContinueShopping }: OrderConfirmati
                 <span className="min-w-0">
                   <span className="block truncate font-medium text-stone-900">{line.name}</span>
                   <span className="text-xs text-stone-500">
-                    {formatUsd(line.unit_price)} × {line.quantity}
+                    {format(line.unit_price)} × {line.quantity}
                   </span>
                 </span>
               </span>
-              <span className="shrink-0 font-medium">{formatUsd(line.quantity * line.unit_price)}</span>
+              <span className="shrink-0 font-medium">
+                {format(line.quantity * line.unit_price)}
+              </span>
             </li>
           );
         })}
@@ -91,25 +95,25 @@ export function OrderConfirmation({ order, onContinueShopping }: OrderConfirmati
       <dl className="order-confirmation__totals text-sm" aria-label="Payment summary">
         <div className="checkout-total-row">
           <dt className="text-stone-500">Subtotal</dt>
-          <dd className="text-stone-800">{formatUsd(order.subtotal)}</dd>
+          <dd className="text-stone-800">{format(order.subtotal)}</dd>
         </div>
         {order.fees?.map((fee) => (
           <div key={fee.id} className="checkout-total-row">
             <dt className="text-stone-500">{fee.label}</dt>
-            <dd className="text-stone-800">{formatUsd(fee.amount)}</dd>
+            <dd className="text-stone-800">{format(fee.amount)}</dd>
           </div>
         ))}
         <div className="checkout-total-row">
           <dt className="text-stone-500">Tax</dt>
-          <dd className="text-stone-800">{formatUsd(order.tax)}</dd>
+          <dd className="text-stone-800">{format(order.tax)}</dd>
         </div>
         <div className="checkout-total-row">
           <dt className="text-stone-500">Shipping</dt>
-          <dd className="text-stone-800">{formatUsd(order.shipping)}</dd>
+          <dd className="text-stone-800">{format(order.shipping)}</dd>
         </div>
         <div className="order-confirmation__paid">
           <dt>Paid total</dt>
-          <dd>{formatUsd(order.total)}</dd>
+          <dd>{format(order.total)}</dd>
         </div>
       </dl>
 

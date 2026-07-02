@@ -1,23 +1,34 @@
 type SectionHeaderProps = {
+  id?: string;
   title: string;
   subtitle: string;
   count?: number;
   countLabel?: string;
 };
 
-export function SectionHeader({ title, subtitle, count, countLabel = "items" }: SectionHeaderProps) {
+export function SectionHeader({
+  id,
+  title,
+  subtitle,
+  count,
+  countLabel = "items",
+}: SectionHeaderProps) {
   return (
-    <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-semibold tracking-tight text-stone-900">{title}</h2>
-          {count !== undefined ? (
-            <span className="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-500">
-              {count} {count === 1 ? countLabel.replace(/s$/, "") : countLabel}
-            </span>
-          ) : null}
+    <div className="section-header mb-8">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 id={id} className="section-header__title">
+              {title}
+            </h2>
+            {count !== undefined ? (
+              <span className="rounded-full bg-orange-100/80 px-2.5 py-0.5 text-xs font-semibold text-orange-900/70">
+                {count} {count === 1 ? countLabel.replace(/s$/, "") : countLabel}
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-500">{subtitle}</p>
         </div>
-        <p className="mt-1 max-w-2xl text-sm leading-relaxed text-stone-500">{subtitle}</p>
       </div>
     </div>
   );
