@@ -11,6 +11,12 @@ function productImageUrl(filename: string): string {
   return `${SITE_URL}/products/${filename}`;
 }
 
+/** Stable Unsplash hotlinks (same pattern as the splitante.com catalog seed) —
+ *  real photography is what makes the demo read as a real store. */
+function unsplash(id: string): string {
+  return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1000&q=72`;
+}
+
 /** Ante default minimum order for USD (matches splitante.com merchant settings). */
 export const MINIMUM_ORDER_CENTS = getMinimumOrderMinor("USD");
 
@@ -139,7 +145,7 @@ export const PRODUCTS: Product[] = [
     currency: "USD",
     emoji: "🎫",
     category: "tickets",
-    imageUrl: productImageUrl("tickets-concert.svg"),
+    imageUrl: unsplash("1470229722913-7c0e2dbbafd3"),
   },
   {
     id: "festival-passes",
@@ -149,7 +155,7 @@ export const PRODUCTS: Product[] = [
     currency: "USD",
     emoji: "🎪",
     category: "tickets",
-    imageUrl: productImageUrl("tickets-festival.svg"),
+    imageUrl: unsplash("1501281668745-f7f57925c3b4"),
   },
   {
     id: "espresso-machine",
@@ -159,7 +165,7 @@ export const PRODUCTS: Product[] = [
     currency: "USD",
     emoji: "🎁",
     category: "gifts",
-    imageUrl: productImageUrl("gift-espresso.svg"),
+    imageUrl: unsplash("1495474472287-4d71bcdd2085"),
   },
   {
     id: "cargo-ebike",
@@ -169,7 +175,7 @@ export const PRODUCTS: Product[] = [
     currency: "USD",
     emoji: "🚲",
     category: "gifts",
-    imageUrl: productImageUrl("gift-ebike.svg"),
+    imageUrl: unsplash("1485965120184-e220f721d03e"),
   },
 ];
 
