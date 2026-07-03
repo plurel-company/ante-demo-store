@@ -11,7 +11,8 @@ import { ProductGrid } from "@/components/product-grid";
    cross-site fetch ever leaves the browser — some devices block those outright.
    The hosted checkout loads from the ante app's vercel.app alias: if this store
    page loaded, that domain family is reachable too. */
-const PAY_BASE = "https://ante-tabby-ante.vercel.app";
+const DEFAULT_PAY_BASE = "https://splitante.com";
+const FALLBACK_PAY_BASE = "https://ante-tabby-ante.vercel.app";
 
 /** The SDK's checkout iframe ships allow="payment *; clipboard-write" — without
  *  `web-share` the browser blocks navigator.share inside it, so the checkout's
@@ -42,18 +43,19 @@ function useGrantWebShareToCheckout() {
 }
 
 export function Storefront() {
-  const { merchantId, publishableKey, environment, mode } = useAnteMode();
+  const { merchantId, publishableKey, environment, mode, apiFallback } = useAnteMode();
   useGrantWebShareToCheckout();
+  const payBaseUrl = apiFallback ? FALLBACK_PAY_BASE : DEFAULT_PAY_BASE;
 
   return (
     <AnteProvider
-      key={`${mode}-${publishableKey.slice(0, 12)}`}
+      key={`${mode}-${publishableKey.slice(0, 12)}-${payBaseUrl}`}
       merchantId={merchantId}
       publishableKey={publishableKey}
       environment={environment}
       theme="light"
       apiBaseUrl="/api/ante/v1"
-      payBaseUrl={PAY_BASE}
+      payBaseUrl={payBaseUrl}
     >
       <div className="grid items-start gap-8 lg:grid-cols-[1fr_360px] lg:gap-10">
         <div className="min-w-0">
