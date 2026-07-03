@@ -1,7 +1,7 @@
 "use client";
 
 import { AnteButton, type Cart } from "@splitante/react-sdk";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useCart } from "@/components/cart-context";
 import { useAnteMode } from "@/components/ante-mode-provider";
@@ -86,6 +86,19 @@ export function CheckoutPanel() {
   const [status, setStatus] = useState<string | null>(null);
   const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrder | null>(null);
   const [pollingOrderRef, setPollingOrderRef] = useState<string | null>(null);
+  const anteButtonWrapRef = useRef<HTMLDivElement | null>(null);
+  const [autoRetry, setAutoRetry] = useState(false);
+
+  // After a network failure flips the SDK to the backup route, the provider
+  // remounts — re-fire the checkout automatically so one tap is enough.
+  useEffect(() => {
+    if (!autoRetry || !apiFallback) return;
+    setAutoRetry(false);
+    const timer = setTimeout(() => {
+      anteButtonWrapRef.current?.querySelector("button")?.click();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [autoRetry, apiFallback]);
 
   const cartLines = useMemo(() => buildProductCartLines(cart), [cart]);
   const anteCart = useMemo(() => buildAnteCart(cart, orderRef), [cart, orderRef]);
@@ -313,7 +326,7 @@ export function CheckoutPanel() {
       ) : null}
 
       {anteCart ? (
-        <div className="checkout-ante-button-wrap">
+        <div className="checkout-ante-button-wrap" ref={anteButtonWrapRef}>
           <AnteButton
             getSignature={signCart}
             cart={anteCart}
@@ -344,8 +357,9 @@ export function CheckoutPanel() {
                   (raw.includes("Load failed") || raw.includes("Failed to fetch") || raw.includes("NetworkError"))
                 ) {
                   enableApiFallback();
+                  setAutoRetry(true);
                   setStatus(
-                    "Couldn't reach splitante.com from this network — switched to a backup route. Tap Split with Ante again.",
+                    "Network hiccup — retrying over a backup connection… If nothing opens, tap Split with Ante again.",
                   );
                   return;
                 }
