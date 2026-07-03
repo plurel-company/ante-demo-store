@@ -29,6 +29,8 @@ export function StoreShell({ configured, children }: StoreShellProps) {
             <nav className="pillnav">
               <a href="#section-shop">Shop</a>
               <a href="#section-lodging">Stays</a>
+              <a href="#section-tickets">Tickets</a>
+              <a href="#section-gifts">Gifts</a>
               <a href="https://splitante.com/docs" target="_blank" rel="noreferrer">
                 Docs
               </a>
@@ -59,7 +61,7 @@ export function StoreShell({ configured, children }: StoreShellProps) {
             Split <span className="store-hero__accent">Shop</span>
           </h1>
           <p className="store-hero__lede">
-            Shop physical goods and book stays across USD, EUR, GBP, and JPY — then open
+            Shop goods, book stays, grab event tickets, and pool group gifts — then open
             Ante&apos;s hosted group checkout to split payment with friends.
           </p>
 

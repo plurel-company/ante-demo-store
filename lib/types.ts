@@ -3,7 +3,7 @@ import type { Cart } from "@splitante/sdk";
 import type { CurrencyCode } from "@/lib/currency";
 
 /** Demo catalog categories — shop (physical goods) vs lodging (nightly stays). */
-export type ProductCategory = "shop" | "lodging";
+export type ProductCategory = "shop" | "lodging" | "tickets" | "gifts";
 
 export type LodgingDetails = {
   beds: string;

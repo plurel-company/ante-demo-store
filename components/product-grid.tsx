@@ -40,11 +40,13 @@ export function ProductGrid() {
             <div className="space-y-10">
               {currencyGroups.map((group) => (
                 <div key={`${section.id}-${group.currency}`}>
-                  <CurrencySubheader
-                    currency={group.currency}
-                    productCount={group.products.length}
-                    countLabel={isLodging ? "listings" : "products"}
-                  />
+                  {currencyGroups.length > 1 ? (
+                    <CurrencySubheader
+                      currency={group.currency}
+                      productCount={group.products.length}
+                      countLabel={isLodging ? "listings" : "products"}
+                    />
+                  ) : null}
                   <div
                     className={
                       isLodging
