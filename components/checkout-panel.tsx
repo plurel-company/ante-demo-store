@@ -81,7 +81,7 @@ function isErrorStatus(status: string | null): boolean {
 
 export function CheckoutPanel() {
   const { cart, itemCount, subtotal, currency, clearCart } = useCart();
-  const { modeHeaders, mode } = useAnteMode();
+  const { modeHeaders, mode, apiFallback, enableApiFallback } = useAnteMode();
   const [orderRef, setOrderRef] = useState(makeOrderRef);
   const [status, setStatus] = useState<string | null>(null);
   const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrder | null>(null);
@@ -337,7 +337,18 @@ export function CheckoutPanel() {
               },
               onError: (error) => {
                 resetCheckoutWait();
-                reportClientError("checkout", error);
+                reportClientError(apiFallback ? "checkout-fallback" : "checkout", error);
+                const raw = String(error.message);
+                if (
+                  !apiFallback &&
+                  (raw.includes("Load failed") || raw.includes("Failed to fetch") || raw.includes("NetworkError"))
+                ) {
+                  enableApiFallback();
+                  setStatus(
+                    "Couldn't reach splitante.com from this network — switched to a backup route. Tap Split with Ante again.",
+                  );
+                  return;
+                }
                 setStatus(
                   `${checkoutErrorMessage(error)}\n[${error.name}: ${String(error.message).slice(0, 120)}]`,
                 );

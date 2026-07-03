@@ -36,6 +36,10 @@ type AnteModeContextValue = {
   hasTestKey: boolean;
   hasLiveKey: boolean;
   modeHeaders: Record<string, string>;
+  /** True after a network-level failure reaching splitante.com — routes the SDK
+   *  through the app's vercel.app alias (some DNS filters block new domains). */
+  apiFallback: boolean;
+  enableApiFallback: () => void;
 };
 
 const AnteModeContext = createContext<AnteModeContextValue | null>(null);
@@ -58,6 +62,8 @@ export function AnteModeProvider({
   const [mode, setModeState] = useState<AnteCredentialMode>(() =>
     defaultMode(hasTestKey, hasLiveKey),
   );
+  const [apiFallback, setApiFallback] = useState(false);
+  const enableApiFallback = useCallback(() => setApiFallback(true), []);
 
   useEffect(() => {
     try {
@@ -97,8 +103,10 @@ export function AnteModeProvider({
       hasTestKey,
       hasLiveKey,
       modeHeaders: { [ANTE_KEY_MODE_HEADER]: mode },
+      apiFallback,
+      enableApiFallback,
     }),
-    [merchantId, mode, setMode, publishableKey, hasTestKey, hasLiveKey],
+    [merchantId, mode, setMode, publishableKey, hasTestKey, hasLiveKey, apiFallback, enableApiFallback],
   );
 
   return <AnteModeContext.Provider value={value}>{children}</AnteModeContext.Provider>;
