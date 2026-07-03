@@ -49,7 +49,7 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
         </div>
 
         <div className="mt-auto pt-4">
-          <div className="flex items-end justify-between gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
             <p className="font-mono text-base font-medium tabular-nums text-ink">
               {formatMoney(product.unitPrice, product.currency)}
             </p>

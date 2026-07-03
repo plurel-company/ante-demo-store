@@ -87,7 +87,7 @@ export function LodgingProductCard({ product }: LodgingProductCardProps) {
           <FeePreview fees={product.fees} currency={product.currency} />
         ) : null}
 
-        <div className="mt-auto flex items-end justify-between gap-4 border-t border-hair pt-4">
+        <div className="mt-auto flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-t border-hair pt-4">
           <div>
             <p className="font-mono text-xl font-medium tabular-nums text-ink">
               {formatMoney(product.unitPrice, product.currency)}
