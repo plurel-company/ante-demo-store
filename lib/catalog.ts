@@ -17,6 +17,11 @@ function unsplash(id: string): string {
   return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1000&q=72`;
 }
 
+/** Pexels CDN hotlinks — used where the Unsplash seed ids didn't match the product. */
+function pexels(id: string): string {
+  return `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1000`;
+}
+
 /** Ante default minimum order for USD (matches splitante.com merchant settings). */
 export const MINIMUM_ORDER_CENTS = getMinimumOrderMinor("USD");
 
@@ -165,7 +170,7 @@ export const PRODUCTS: Product[] = [
     currency: "USD",
     emoji: "🎁",
     category: "gifts",
-    imageUrl: unsplash("1495474472287-4d71bcdd2085"),
+    imageUrl: pexels("2775827"),
   },
   {
     id: "cargo-ebike",
@@ -175,7 +180,7 @@ export const PRODUCTS: Product[] = [
     currency: "USD",
     emoji: "🚲",
     category: "gifts",
-    imageUrl: unsplash("1485965120184-e220f721d03e"),
+    imageUrl: pexels("13437652"),
   },
 ];
 
