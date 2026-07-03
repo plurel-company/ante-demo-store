@@ -103,7 +103,7 @@ export function StoreShell({ configured, children }: StoreShellProps) {
           </p>
 
           <div className="site-footer__legal">
-            <span>Open demo storefront · Test mode · No real charges</span>
+            <span>© 2026 Plurel Inc. All rights reserved. · Open demo · Test mode · No real charges</span>
             <a href="https://splitante.com" target="_blank" rel="noreferrer">
               splitante.com
             </a>
