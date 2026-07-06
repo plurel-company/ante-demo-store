@@ -51,9 +51,17 @@ Cart state ──► buildAnteCart ──► POST /api/cart/sign ──► HMAC 
 Webhook poll ◄── GET /api/orders/[ref] ◄── markOrderFunded ◄── POST /api/webhooks/ante
 ```
 
-**Fulfill on `group.funded`**, not on client callbacks alone. The demo uses an in-memory order store (`lib/order-store.ts`) — replace with your database in production. On serverless hosts with multiple instances, use a shared store (Redis, Postgres, etc.) so webhooks and polling hit the same ledger.
+**Fulfill on `group.funded`**, not on client callbacks alone.
 
-### Production patterns (read before copying)
+### In-memory order store (demo only)
+
+`lib/order-store.ts` keeps pending and funded orders in a **process-local `Map`**. That is fine for local dev and single-instance demos, but it is **not** production-safe:
+
+- Restarts wipe all orders.
+- Serverless / multi-instance hosts may route the webhook and the browser poll to **different** instances, so funding never appears in the UI.
+- There is no cross-region durability or replay protection beyond idempotent webhook handling in this route.
+
+**Production pattern:** persist orders in Postgres, Redis, or your OMS before opening checkout; fulfill inside the webhook with idempotent updates keyed by `order_ref` (and optionally `event.id`). The demo’s fail-closed checks (registered pending order, matching credential mode, minimum `total`) should carry over unchanged.
 
 | Pattern | Demo behavior | Production recommendation |
 | --- | --- | --- |
@@ -150,6 +158,7 @@ hooks/use-order-funding-poll.ts  # Poll until webhook marks funded
 | `pnpm dev` | Start Next.js dev server |
 | `pnpm build` | Production build |
 | `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm test` | Unit tests (`lib/*.test.ts`) |
 
 ## Deploy
 

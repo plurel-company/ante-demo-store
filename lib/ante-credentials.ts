@@ -1,8 +1,6 @@
 /** Server-only Ante credential resolution and webhook verification. */
 import "server-only";
 
-import { verifyWebhookSignature } from "@splitante/sdk/signing";
-
 import type { AnteCredentialMode } from "@/lib/ante-credential-mode";
 
 export type { AnteCredentialMode } from "@/lib/ante-credential-mode";
@@ -12,6 +10,8 @@ export {
   modeLabel,
   parseAnteCredentialMode,
 } from "@/lib/ante-credential-mode";
+
+export { listWebhookSecrets, verifyAnteWebhookSignature } from "@/lib/ante-webhook-verification";
 
 /** Unqualified env vars (no _TEST suffix) are the live credentials — matches typical Vercel setup. */
 export function resolvePublishableKey(mode: AnteCredentialMode): string {
@@ -33,44 +33,6 @@ export function resolveWebhookSecret(mode: AnteCredentialMode): string {
     );
   }
   return process.env.ANTE_WEBHOOK_SECRET_TEST?.trim() || "";
-}
-
-type WebhookSecretCandidate = { secret: string; mode: AnteCredentialMode };
-
-function webhookSecretCandidates(): WebhookSecretCandidate[] {
-  const out: WebhookSecretCandidate[] = [];
-  const seen = new Set<string>();
-
-  const add = (value: string | undefined, mode: AnteCredentialMode) => {
-    const trimmed = value?.trim();
-    if (!trimmed || seen.has(trimmed)) return;
-    seen.add(trimmed);
-    out.push({ secret: trimmed, mode });
-  };
-
-  add(process.env.ANTE_WEBHOOK_SECRET_TEST, "sandbox");
-  add(process.env.ANTE_WEBHOOK_SECRET_LIVE, "live");
-  add(process.env.ANTE_WEBHOOK_SECRET, "live");
-
-  return out;
-}
-
-/** All configured webhook secrets — used when inbound webhooks have no mode header. */
-export function listWebhookSecrets(): string[] {
-  return webhookSecretCandidates().map((candidate) => candidate.secret);
-}
-
-/** Verify signature; returns the credential mode of the secret that matched. */
-export function verifyAnteWebhookSignature(
-  rawBody: string,
-  signatureHeader: string,
-): AnteCredentialMode | null {
-  for (const candidate of webhookSecretCandidates()) {
-    if (verifyWebhookSignature(rawBody, candidate.secret, signatureHeader)) {
-      return candidate.mode;
-    }
-  }
-  return null;
 }
 
 export function merchantId(): string {
