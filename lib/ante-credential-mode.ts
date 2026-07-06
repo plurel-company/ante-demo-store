@@ -18,3 +18,11 @@ export function keyModeMatches(mode: AnteCredentialMode, key: string): boolean {
   if (!detected) return true;
   return mode === "live" ? detected === "live" : detected === "sandbox";
 }
+
+/** Derive sandbox/live from the publishable key prefix — do not trust client mode headers alone. */
+export function credentialModeFromPublishableKey(key: string): AnteCredentialMode {
+  const detected = publishableKeyMode(key.trim());
+  if (detected === "live") return "live";
+  if (detected === "sandbox") return "sandbox";
+  throw new Error("Invalid publishable key — expected ante_pk_test_* or ante_pk_live_*");
+}
