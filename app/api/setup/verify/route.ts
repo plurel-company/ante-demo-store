@@ -5,10 +5,10 @@ import {
   merchantId,
   modeLabel,
   parseAnteCredentialMode,
-  resolvePublishableKey,
   signingSecret,
   ANTE_KEY_MODE_HEADER,
 } from "@/lib/ante-credentials";
+import { ANTE_API_BASE, secretKeyForSessions } from "@/lib/ante-upstream";
 import { explainAnteApiError } from "@/lib/ante-env";
 import { createCartSignature } from "@/lib/cart-signing";
 
@@ -22,25 +22,32 @@ const PROBE_CART: Cart = {
 export async function POST(req: Request) {
   const mode = parseAnteCredentialMode(req.headers.get(ANTE_KEY_MODE_HEADER));
   const id = merchantId();
-  const publishableKey = resolvePublishableKey(mode);
   const secret = signingSecret();
 
-  if (!id || !publishableKey || !secret) {
+  if (!id || !secret) {
     return Response.json(
       {
         ok: false,
-        error: `Missing merchant ID, ${modeLabel(mode).toLowerCase()} publishable key, or ANTE_SIGNING_SECRET.`,
+        error: `Missing merchant ID or ANTE_SIGNING_SECRET.`,
       },
       { status: 503 },
     );
   }
 
+  let apiKey: string;
+  try {
+    apiKey = secretKeyForSessions(mode);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Secret API key not configured";
+    return Response.json({ ok: false, error: message }, { status: 503 });
+  }
+
   const signature = createCartSignature(PROBE_CART, secret);
 
-  const response = await fetch("https://splitante.com/api/v1/sessions", {
+  const response = await fetch(`${ANTE_API_BASE}/sessions`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${publishableKey}`,
+      Authorization: `Bearer ${apiKey}`,
       "X-Merchant-ID": id,
       "Content-Type": "application/json",
       "X-Ante-Signature": signature,
@@ -61,11 +68,11 @@ export async function POST(req: Request) {
   if (response.ok) {
     if (payload?.session_id) {
       await fetch(
-        `https://splitante.com/api/v1/sessions/${encodeURIComponent(payload.session_id)}/cancel`,
+        `${ANTE_API_BASE}/sessions/${encodeURIComponent(payload.session_id)}/cancel`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${publishableKey}`,
+            Authorization: `Bearer ${apiKey}`,
             "X-Merchant-ID": id,
             "Content-Type": "application/json",
           },

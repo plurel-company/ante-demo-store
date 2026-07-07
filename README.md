@@ -81,10 +81,14 @@ See [`lib/ante-credentials.ts`](./lib/ante-credentials.ts) (`verifyAnteWebhookSi
 | `NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST` | Client | **Test** — `ante_pk_test_*` for sandbox checkout |
 | `NEXT_PUBLIC_SITE_URL` | Client | Origin for absolute product image URLs |
 | `ANTE_SIGNING_SECRET` | Server only | `ante_sign_*` for cart HMAC (shared across modes) |
+| `ANTE_SECRET_KEY` | Server only | **Live** — `ante_sk_live_*` for session create/cancel (payments:write) |
+| `ANTE_SECRET_KEY_TEST` | Server only | **Test** — `ante_sk_test_*` for sandbox sessions |
 | `ANTE_WEBHOOK_SECRET` | Server only | **Live** — `whsec_*` for live webhook deliveries |
 | `ANTE_WEBHOOK_SECRET_TEST` | Server only | **Test** — `whsec_*` for sandbox webhooks |
 
-Optional aliases: `NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE`, `ANTE_WEBHOOK_SECRET_LIVE`.
+Optional aliases: `NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE`, `ANTE_WEBHOOK_SECRET_LIVE`, `ANTE_SECRET_KEY_LIVE`.
+
+The browser SDK still uses the **publishable** key. Session create/cancel is proxied through `/api/ante/v1` and authenticated upstream with the **secret** key (`payments:write`).
 
 Use the **Test / Live** switch in the store header to pick which publishable key the SDK uses. Your choice is remembered in the browser.
 
@@ -110,7 +114,7 @@ Ante returns this with a `details` array listing common causes. It does **not** 
 
 1. Use **`ANTE_SIGNING_SECRET`** (`ante_sign_…`) — not `ante_sk_…` or `whsec_…`.
 2. Copy the **full** secret, redeploy after env changes, and update immediately if you rotated in the dashboard.
-3. Sign with **`createCartSignature`** from `@splitante/sdk/signing` (**≥ 0.1.10**). Ante always includes `fees: []` in the HMAC when the cart has no custom fees.
+3. Sign with **`createCartSignature`** from `@splitante/sdk/signing` (**≥ 0.1.12**). Ante always includes `fees: []` in the HMAC when the cart has no custom fees.
 4. Re-sign at checkout click if the cart changed after signing.
 
 Docs: [Cart signing](https://splitante.com/docs/cart-signing) · [Troubleshooting](https://splitante.com/docs/troubleshooting)
@@ -125,6 +129,10 @@ curl -X POST http://localhost:3000/api/setup/verify \
 ### `ANTE_SIGNING_SECRET is not configured`
 
 Add the server env var on your deployment. Local dev: copy `.env.example` → `.env.local`.
+
+### `API key missing scope: payments:write`
+
+Publishable keys (`ante_pk_*`) are read-only. Session create needs `payments:write`, which only secret keys (`ante_sk_*`) have. Add `ANTE_SECRET_KEY_TEST` (sandbox) and/or `ANTE_SECRET_KEY` (live) on the server. This demo proxies `/api/ante/v1/sessions` and swaps in the secret key upstream — the browser never sees it.
 
 ## Project layout
 
