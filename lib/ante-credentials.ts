@@ -26,6 +26,19 @@ export function resolvePublishableKey(mode: AnteCredentialMode): string {
   return process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST?.trim() || "";
 }
 
+/** Server-only secret API key — required for session create/cancel (payments:write). */
+export function resolveSecretKey(mode: AnteCredentialMode): string {
+  if (mode === "live") {
+    return (
+      process.env.ANTE_SECRET_KEY_LIVE?.trim() ||
+      process.env.ANTE_SECRET_KEY?.trim() ||
+      ""
+    );
+  }
+
+  return process.env.ANTE_SECRET_KEY_TEST?.trim() || "";
+}
+
 export function resolveWebhookSecret(mode: AnteCredentialMode): string {
   if (mode === "live") {
     return (
@@ -48,6 +61,8 @@ export function credentialAvailability(): {
   merchantId: boolean;
   testKey: boolean;
   liveKey: boolean;
+  testSecretKey: boolean;
+  liveSecretKey: boolean;
   signingSecret: boolean;
   webhookTest: boolean;
   webhookLive: boolean;
@@ -58,6 +73,10 @@ export function credentialAvailability(): {
     liveKey: Boolean(
       process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE?.trim() ||
         process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY?.trim(),
+    ),
+    testSecretKey: Boolean(process.env.ANTE_SECRET_KEY_TEST?.trim()),
+    liveSecretKey: Boolean(
+      process.env.ANTE_SECRET_KEY_LIVE?.trim() || process.env.ANTE_SECRET_KEY?.trim(),
     ),
     signingSecret: Boolean(signingSecret()),
     webhookTest: Boolean(process.env.ANTE_WEBHOOK_SECRET_TEST?.trim()),

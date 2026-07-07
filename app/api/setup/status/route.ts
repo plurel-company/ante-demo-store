@@ -4,6 +4,7 @@ import {
   merchantId,
   parseAnteCredentialMode,
   resolvePublishableKey,
+  resolveSecretKey,
   resolveWebhookSecret,
   signingSecret,
   ANTE_KEY_MODE_HEADER,
@@ -15,6 +16,7 @@ export async function GET(req: Request) {
   const id = merchantId();
   const publishableKey = resolvePublishableKey(mode);
   const secret = signingSecret();
+  const secretKey = resolveSecretKey(mode);
   const webhookSecret = resolveWebhookSecret(mode);
   const keyMode = publishableKeyMode(publishableKey);
   const availability = credentialAvailability();
@@ -40,6 +42,13 @@ export async function GET(req: Request) {
       "Set ANTE_SIGNING_SECRET on the server (Developers → Signing). Without it, checkout cannot sign carts.",
     );
   }
+  if (!secretKey) {
+    issues.push(
+      mode === "live"
+        ? "Set ANTE_SECRET_KEY or ANTE_SECRET_KEY_LIVE (ante_sk_live_*) on the server. Session create requires payments:write."
+        : "Set ANTE_SECRET_KEY_TEST (ante_sk_test_*) on the server. Session create requires payments:write.",
+    );
+  }
   if (!webhookSecret) {
     issues.push(
       mode === "live"
@@ -56,6 +65,7 @@ export async function GET(req: Request) {
     publishableKeyMode: keyMode,
     publishableKeyLength: publishableKey.length,
     signingSecret: Boolean(secret),
+    secretKey: Boolean(secretKey),
     webhookSecret: Boolean(webhookSecret),
     testKey: availability.testKey,
     liveKey: availability.liveKey,

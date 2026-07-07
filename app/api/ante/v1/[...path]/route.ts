@@ -4,20 +4,20 @@
  *  modes, filtered networks) — the browser reports `TypeError: Load failed`
  *  before the request leaves the device. Routing the SDK through this
  *  same-origin path removes the cross-site request entirely; the forward to
- *  splitante.com happens server-side, which is never blocked. */
+ *  splitante.com happens server-side, which is never blocked.
+ *
+ *  Session create/cancel/remind require payments:write. Publishable keys are
+ *  read-only, so we authenticate upstream with ANTE_SECRET_KEY_* server-side
+ *  while the browser SDK still only holds the publishable key. */
 
-const UPSTREAM = "https://splitante.com/api/v1";
+import {
+  ANTE_KEY_MODE_HEADER,
+  parseAnteCredentialMode,
+} from "@/lib/ante-credentials";
+import { ANTE_API_BASE, buildUpstreamSessionHeaders } from "@/lib/ante-upstream";
+
 /** Only the session endpoints the storefront SDK actually uses. */
 const ALLOWED_PATH = /^sessions(\/|$)?/;
-const FORWARD_HEADERS = [
-  "authorization",
-  "content-type",
-  "x-merchant-id",
-  "x-ante-signature",
-  "x-ante-cart-signature",
-  "x-ante-sdk-version",
-  "x-ante-react-sdk-version",
-];
 
 type RouteParams = { params: Promise<{ path: string[] }> };
 
@@ -28,14 +28,18 @@ async function forward(request: Request, { params }: RouteParams) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
-  const search = new URL(request.url).search;
-  const headers = new Headers();
-  for (const name of FORWARD_HEADERS) {
-    const value = request.headers.get(name);
-    if (value) headers.set(name, value);
+  const mode = parseAnteCredentialMode(request.headers.get(ANTE_KEY_MODE_HEADER));
+
+  let headers: Headers;
+  try {
+    headers = buildUpstreamSessionHeaders(mode, request);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Session API not configured";
+    return Response.json({ error: message }, { status: 503 });
   }
 
-  const upstream = await fetch(`${UPSTREAM}/${joined}${search}`, {
+  const search = new URL(request.url).search;
+  const upstream = await fetch(`${ANTE_API_BASE}/${joined}${search}`, {
     method: request.method,
     headers,
     body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text(),
