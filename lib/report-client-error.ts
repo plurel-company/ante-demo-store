@@ -1,5 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
+import { isSentryEnabled } from "@/lib/sentry/sentry.shared.config";
+
 type ClientErrorContext = {
   stage: string;
   ua?: string;
@@ -21,6 +23,10 @@ export function reportClientError(stage: string, error: Error, extra?: Partial<C
     scope.setContext("client", context);
     Sentry.captureException(error);
   });
+
+  if (isSentryEnabled()) {
+    return;
+  }
 
   try {
     void fetch("/api/client-log", {
