@@ -1,9 +1,26 @@
-/** POST /api/client-log — checkout telemetry fallback (also captured in Sentry when configured). */
-import * as Sentry from "@sentry/nextjs";
-
-import { isSentryEnabled } from "@/lib/sentry/sentry.shared.config";
+/** POST /api/client-log — dev-only checkout telemetry fallback when Sentry is not configured. */
+import {
+  isRateLimited,
+  isSameOriginRequest,
+  sanitizeClientLogPayload,
+} from "@/lib/client-log-payload";
 
 export async function POST(request: Request) {
+  // Production checkout errors are captured in the browser via Sentry + /monitoring tunnel.
+  if (process.env.NODE_ENV === "production") {
+    return new Response(null, { status: 404 });
+  }
+
+  if (!isSameOriginRequest(request)) {
+    return new Response(null, { status: 403 });
+  }
+
+  const clientKey =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (isRateLimited(clientKey)) {
+    return new Response(null, { status: 429 });
+  }
+
   let body: Record<string, unknown> = {};
   try {
     body = (await request.json()) as Record<string, unknown>;
@@ -11,18 +28,8 @@ export async function POST(request: Request) {
     body = { message: "unparseable payload" };
   }
 
-  const stage = typeof body.stage === "string" ? body.stage : "unknown";
-  const message = typeof body.message === "string" ? body.message : "client error";
-
-  if (isSentryEnabled()) {
-    Sentry.withScope((scope) => {
-      scope.setTag("checkout_stage", stage);
-      scope.setContext("client", body);
-      Sentry.captureMessage(`[client-log] ${stage}: ${message}`, "error");
-    });
-  } else if (process.env.NODE_ENV !== "production") {
-    console.error("[client-error]", JSON.stringify(body).slice(0, 2000));
-  }
+  const sanitized = sanitizeClientLogPayload(body);
+  console.error("[client-error]", JSON.stringify(sanitized));
 
   return new Response(null, { status: 204 });
 }
