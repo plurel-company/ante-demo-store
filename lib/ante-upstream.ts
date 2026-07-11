@@ -3,6 +3,9 @@ import "server-only";
 
 import type { AnteCredentialMode } from "@/lib/ante-credential-mode";
 import { merchantId, resolveSecretKey } from "@/lib/ante-credentials";
+import {
+  correctStaleSdkVersionHeaders,
+} from "@/lib/installed-sdk-versions";
 
 export const ANTE_API_BASE = "https://splitante.com/api/v1";
 
@@ -48,6 +51,8 @@ export function buildUpstreamSessionHeaders(
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
   }
+
+  correctStaleSdkVersionHeaders(headers, request);
 
   return headers;
 }
