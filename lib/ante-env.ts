@@ -1,16 +1,22 @@
-/** Publishable-key parsing and user-facing Ante API error messages. */
-export type AnteKeyMode = "sandbox" | "live" | null;
+/** Publishable-key parsing and user-facing Plurel Pay API error messages. */
+export type PlurelKeyMode = "sandbox" | "live" | null;
 
-export function publishableKeyMode(key: string | undefined): AnteKeyMode {
+/** @deprecated Use PlurelKeyMode */
+export type AnteKeyMode = PlurelKeyMode;
+
+export function publishableKeyMode(key: string | undefined): PlurelKeyMode {
   if (!key) return null;
-  if (key.startsWith("ante_pk_test_")) return "sandbox";
-  if (key.startsWith("ante_pk_live_")) return "live";
+  if (key.startsWith("plurel_pk_test_") || key.startsWith("ante_pk_test_")) return "sandbox";
+  if (key.startsWith("plurel_pk_live_") || key.startsWith("ante_pk_live_")) return "live";
   return null;
 }
 
-export function anteEnvironmentFromKey(key: string): "sandbox" | "production" {
+export function plurelEnvironmentFromKey(key: string): "sandbox" | "production" {
   return publishableKeyMode(key) === "live" ? "production" : "sandbox";
 }
+
+/** @deprecated Use plurelEnvironmentFromKey */
+export const anteEnvironmentFromKey = plurelEnvironmentFromKey;
 
 /** Dashboard shows a 16-char prefix — full keys are longer. */
 export function looksLikeKeyPrefix(key: string): boolean {
@@ -18,11 +24,11 @@ export function looksLikeKeyPrefix(key: string): boolean {
   return trimmed.length > 0 && trimmed.length <= 20;
 }
 
-/** Mirrors splitante.com API details[] for Invalid cart signature. */
+/** Mirrors plurelpay.com API details[] for Invalid cart signature. */
 export const INVALID_CART_SIGNATURE_HELP = [
-  "Credential: use ANTE_SIGNING_SECRET (ante_sign_… from Developers → Signing), not ante_sk_… or whsec_….",
+  "Credential: use PLUREL_SIGNING_SECRET (plurel_sign_… from Developers → Signing), not plurel_sk_… or whsec_….",
   "Value: paste the full secret into server env and redeploy. Dashboard rotation invalidates the old value immediately.",
-  "Canonical JSON: sign with createCartSignature from @splitante/sdk/signing (≥0.1.12). Ante always includes fees: [] in the HMAC when the cart has no custom fees.",
+  "Canonical JSON: sign with createCartSignature from @plurel/sdk/signing (≥1.0.0). Plurel Pay always includes fees: [] in the HMAC when the cart has no custom fees.",
   "Timing: re-sign at checkout click — cart edits after signing fail verification.",
 ] as const;
 
@@ -34,14 +40,14 @@ export function formatInvalidCartSignatureHelp(details?: string[]): string {
   ].join("\n");
 }
 
-export function explainAnteApiError(
+export function explainPlurelApiError(
   apiError: string,
   status?: number,
   details?: string[],
 ): string {
   const message = apiError.trim();
   if (!message) {
-    return "Checkout failed — try Verify Ante credentials on this page.";
+    return "Checkout failed — try Verify Plurel Pay credentials on this page.";
   }
 
   if (message.includes("Invalid cart signature")) {
@@ -57,23 +63,23 @@ export function explainAnteApiError(
     message.includes("Failed to fetch") ||
     message.includes("NetworkError")
   ) {
-    return "Couldn't reach Ante's sandbox API — check your connection and try again.";
+    return "Couldn't reach Plurel Pay's sandbox API — check your connection and try again.";
   }
 
   if (message.includes("Missing Authorization bearer")) {
-    return "Publishable key missing in the browser — set NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY and redeploy.";
+    return "Publishable key missing in the browser — set NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY (or NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY) and redeploy.";
   }
 
   if (message.includes("API key missing scope: payments:write")) {
-    return "Session create needs payments:write. Add ANTE_SECRET_KEY_TEST (ante_sk_test_*) or ANTE_SECRET_KEY (ante_sk_live_*) on the server — publishable keys are read-only. The demo store proxy uses the secret key automatically.";
+    return "Session create needs payments:write. Add PLUREL_SECRET_KEY_TEST (plurel_sk_test_*) or PLUREL_SECRET_KEY (plurel_sk_live_*) on the server — publishable keys are read-only. The demo store proxy uses the secret key automatically.";
   }
 
   if (message.includes("X-Merchant-ID does not match")) {
-    return "Merchant ID does not match the publishable key. Use the ante_merch_* ID from the same merchant account.";
+    return "Merchant ID does not match the publishable key. Use the plurel_merch_* ID from the same merchant account.";
   }
 
   if (message.includes("does not match merchant mode")) {
-    return "Key mode mismatch — use ante_pk_live_* for live merchants or ante_pk_test_* for sandbox merchants.";
+    return "Key mode mismatch — use plurel_pk_live_* for live merchants or plurel_pk_test_* for sandbox merchants.";
   }
 
   if (message.includes("Cart total does not match") || message.includes("does not match subtotal")) {
@@ -81,32 +87,43 @@ export function explainAnteApiError(
   }
 
   if (message.includes("Order total must be at least")) {
-    return `${message} Add more items to your cart — this demo enforces the same minimum as your Ante merchant settings.`;
+    return `${message} Add more items to your cart — this demo enforces the same minimum as your Plurel Pay merchant settings.`;
   }
 
   if (message.includes("Set up payouts") || message.includes("payout")) {
-    return "Finish payout setup in the Ante merchant dashboard before accepting payments.";
+    return "Finish payout setup in the Plurel Pay merchant dashboard before accepting payments.";
   }
 
   if (message === "Unauthorized") {
     return [
-      "Ante accepted your key and signature but splitante.com could not reach its backend (internal bearer auth failed).",
-      "• Set the same write secret on Vercel Production and Convex Production: ANTE_INTERNAL_WRITE_SECRET (preferred) or ANTE_INTERNAL_SECRET.",
-      "• If both ANTE_INTERNAL_WRITE_SECRET and ANTE_INTERNAL_SECRET exist, the write secret wins — they must match on both sides.",
-      "• Redeploy splitante.com on Vercel after changing env vars (Convex picks up env immediately).",
-      "• Check GET https://splitante.com/api/health/sdk — internal_convex_auth should be \"ok\".",
+      "Plurel Pay accepted your key and signature but plurelpay.com could not reach its backend (internal bearer auth failed).",
+      "• Set the same write secret on Vercel Production and Convex Production: PLUREL_INTERNAL_WRITE_SECRET (preferred) or PLUREL_INTERNAL_SECRET (legacy ANTE_INTERNAL_* also accepted).",
+      "• If both write and legacy internal secrets exist, the write secret wins — they must match on both sides.",
+      "• Redeploy plurelpay.com on Vercel after changing env vars (Convex picks up env immediately).",
+      "• Check GET https://plurelpay.com/api/health/sdk — internal_convex_auth should be \"ok\".",
     ].join("\n");
   }
 
   if (message.includes("Service temporarily unavailable")) {
-    return "Ante could not create the session right now. Common causes: payout setup incomplete, merchant not in live mode, or splitante.com backend error. Check the merchant dashboard, then retry Verify Ante credentials.";
+    return "Plurel Pay could not create the session right now. Common causes: payout setup incomplete, merchant not in live mode, or plurelpay.com backend error. Check the merchant dashboard, then retry Verify credentials.";
   }
 
   if (status === 401) {
-    return `Authentication failed (${message}). Confirm merchant ID, full publishable key, and signing secret are from the same Ante merchant.`;
+    return `Authentication failed (${message}). Confirm merchant ID, full publishable key, and signing secret are from the same Plurel Pay merchant.`;
   }
 
   return message;
+}
+
+/** @deprecated Use explainPlurelApiError */
+export const explainAnteApiError = explainPlurelApiError;
+
+function isMerchantId(value: string): boolean {
+  return value.startsWith("plurel_merch_") || value.startsWith("ante_merch_");
+}
+
+function isSigningSecret(value: string): boolean {
+  return value.startsWith("plurel_sign_") || value.startsWith("ante_sign_");
 }
 
 export function validateCredentialShapes(input: {
@@ -117,12 +134,12 @@ export function validateCredentialShapes(input: {
   const issues: string[] = [];
   const { merchantId, publishableKey, signingSecret } = input;
 
-  if (merchantId && !merchantId.startsWith("ante_merch_")) {
-    issues.push("Merchant ID should start with ante_merch_.");
+  if (merchantId && !isMerchantId(merchantId)) {
+    issues.push("Merchant ID should start with plurel_merch_ (or legacy ante_merch_).");
   }
 
   if (publishableKey && !publishableKeyMode(publishableKey)) {
-    issues.push("Publishable key should start with ante_pk_test_ or ante_pk_live_.");
+    issues.push("Publishable key should start with plurel_pk_test_ / plurel_pk_live_ (or legacy ante_pk_*).");
   }
 
   if (publishableKey && looksLikeKeyPrefix(publishableKey)) {
@@ -131,12 +148,12 @@ export function validateCredentialShapes(input: {
     );
   }
 
-  if (signingSecret && !signingSecret.startsWith("ante_sign_")) {
-    issues.push("Signing secret should start with ante_sign_.");
+  if (signingSecret && !isSigningSecret(signingSecret)) {
+    issues.push("Signing secret should start with plurel_sign_ (or legacy ante_sign_).");
   }
 
   if (signingSecret && looksLikeKeyPrefix(signingSecret)) {
-    issues.push("Signing secret looks too short — copy the full ante_sign_* value from Developers → Signing.");
+    issues.push("Signing secret looks too short — copy the full plurel_sign_* value from Developers → Signing.");
   }
 
   return issues;

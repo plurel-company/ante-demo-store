@@ -1,8 +1,6 @@
 import { ImageResponse } from "next/og";
 
-/* Link-preview card — mirrors splitante.com's OG language (paper, ink,
-   terracotta orb lockup) so shared store links read unmistakably as Ante. */
-export const alt = "Split Shop · Ante open demo";
+export const alt = "Split Shop · Plurel Pay open demo";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -32,7 +30,7 @@ export default function Image() {
               boxShadow: "0 0 0 10px rgba(215,82,30,0.14)",
             }}
           />
-          <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em" }}>Ante</div>
+          <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em" }}>Plurel Pay</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -65,7 +63,7 @@ export default function Image() {
               maxWidth: 860,
             }}
           >
-            Build a cart, tap the Ante button, and split payment with friends — no real money
+            Build a cart, tap split with plurel, and split payment with friends — no real money
             moves.
           </div>
         </div>

@@ -1,7 +1,7 @@
 {
   "name": "ante-demo-store",
   "version": "0.1.0",
-  "description": "Reference Next.js storefront for Ante group checkout — cart signing, SDK modal, and webhooks",
+  "description": "Reference Next.js storefront for Plurel Pay group checkout — cart signing, SDK modal, and webhooks",
   "license": "MIT",
   "private": true,
   "repository": {
@@ -16,8 +16,8 @@
     "test": "node --import tsx --test lib/*.test.ts"
   },
   "dependencies": {
-    "@splitante/react-sdk": "^0.1.12",
-    "@splitante/sdk": "^0.1.12",
+    "@plurel/react-sdk": "file:../ante-sdk/packages/react",
+    "@plurel/sdk": "file:../ante-sdk/packages/core",
     "@sentry/nextjs": "^10.63.0",
     "next": "^15.3.3",
     "react": "^19.1.0",

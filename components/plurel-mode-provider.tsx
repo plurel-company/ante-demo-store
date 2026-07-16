@@ -10,56 +10,56 @@ import {
   type ReactNode,
 } from "react";
 
-import { anteEnvironmentFromKey } from "@/lib/ante-env";
+import { plurelEnvironmentFromKey } from "@/lib/ante-env";
 import {
-  type AnteCredentialMode,
-  ANTE_KEY_MODE_HEADER,
+  type PlurelCredentialMode,
+  PLUREL_KEY_MODE_HEADER,
   modeLabel,
-  parseAnteCredentialMode,
+  parsePlurelCredentialMode,
 } from "@/lib/ante-credential-mode";
 
-const STORAGE_KEY = "ante-demo-key-mode";
+const STORAGE_KEY = "plurel-demo-key-mode";
 
-type AnteModeProviderProps = {
+type PlurelModeProviderProps = {
   merchantId: string;
   testPublishableKey: string;
   livePublishableKey: string;
   children: ReactNode;
 };
 
-type AnteModeContextValue = {
+type PlurelModeContextValue = {
   merchantId: string;
-  mode: AnteCredentialMode;
-  setMode: (mode: AnteCredentialMode) => void;
+  mode: PlurelCredentialMode;
+  setMode: (mode: PlurelCredentialMode) => void;
   publishableKey: string;
   environment: "sandbox" | "production";
   hasTestKey: boolean;
   hasLiveKey: boolean;
   modeHeaders: Record<string, string>;
-  /** True after a network-level failure reaching splitante.com — routes the SDK
-   *  through the app's vercel.app alias (some DNS filters block new domains). */
+  /** True after a network-level failure reaching plurelpay.com — routes the SDK
+   *  through a vercel.app alias (some DNS filters block new domains). */
   apiFallback: boolean;
   enableApiFallback: () => void;
 };
 
-const AnteModeContext = createContext<AnteModeContextValue | null>(null);
+const PlurelModeContext = createContext<PlurelModeContextValue | null>(null);
 
-function defaultMode(hasTest: boolean, hasLive: boolean): AnteCredentialMode {
+function defaultMode(hasTest: boolean, hasLive: boolean): PlurelCredentialMode {
   if (hasTest) return "sandbox";
   if (hasLive) return "live";
   return "sandbox";
 }
 
-export function AnteModeProvider({
+export function PlurelModeProvider({
   merchantId,
   testPublishableKey,
   livePublishableKey,
   children,
-}: AnteModeProviderProps) {
+}: PlurelModeProviderProps) {
   const hasTestKey = Boolean(testPublishableKey);
   const hasLiveKey = Boolean(livePublishableKey);
 
-  const [mode, setModeState] = useState<AnteCredentialMode>(() =>
+  const [mode, setModeState] = useState<PlurelCredentialMode>(() =>
     defaultMode(hasTestKey, hasLiveKey),
   );
   const [apiFallback, setApiFallback] = useState(false);
@@ -67,9 +67,9 @@ export function AnteModeProvider({
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("ante-demo-key-mode");
       if (!stored) return;
-      const parsed = parseAnteCredentialMode(stored);
+      const parsed = parsePlurelCredentialMode(stored);
       if (parsed === "live" && hasLiveKey) setModeState("live");
       if (parsed === "sandbox" && hasTestKey) setModeState("sandbox");
     } catch {
@@ -78,7 +78,7 @@ export function AnteModeProvider({
   }, [hasLiveKey, hasTestKey]);
 
   const setMode = useCallback(
-    (next: AnteCredentialMode) => {
+    (next: PlurelCredentialMode) => {
       if (next === "live" && !hasLiveKey) return;
       if (next === "sandbox" && !hasTestKey) return;
       setModeState(next);
@@ -93,29 +93,29 @@ export function AnteModeProvider({
 
   const publishableKey = mode === "live" ? livePublishableKey : testPublishableKey;
 
-  const value = useMemo<AnteModeContextValue>(
+  const value = useMemo<PlurelModeContextValue>(
     () => ({
       merchantId,
       mode,
       setMode,
       publishableKey,
-      environment: anteEnvironmentFromKey(publishableKey),
+      environment: plurelEnvironmentFromKey(publishableKey),
       hasTestKey,
       hasLiveKey,
-      modeHeaders: { [ANTE_KEY_MODE_HEADER]: mode },
+      modeHeaders: { [PLUREL_KEY_MODE_HEADER]: mode },
       apiFallback,
       enableApiFallback,
     }),
     [merchantId, mode, setMode, publishableKey, hasTestKey, hasLiveKey, apiFallback, enableApiFallback],
   );
 
-  return <AnteModeContext.Provider value={value}>{children}</AnteModeContext.Provider>;
+  return <PlurelModeContext.Provider value={value}>{children}</PlurelModeContext.Provider>;
 }
 
-export function useAnteMode() {
-  const context = useContext(AnteModeContext);
+export function usePlurelMode() {
+  const context = useContext(PlurelModeContext);
   if (!context) {
-    throw new Error("useAnteMode must be used within AnteModeProvider");
+    throw new Error("usePlurelMode must be used within PlurelModeProvider");
   }
   return context;
 }

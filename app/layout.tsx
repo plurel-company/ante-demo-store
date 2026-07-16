@@ -2,9 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
-// Ante brand type: Geist for everything, Instrument Serif for italic accents —
-// matching splitante.com. (Mono retired from the storefront; it read as terminal
-// type. The --font-mono token in globals.css now resolves to Geist.)
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 const instrumentSerif = Instrument_Serif({
   weight: "400",
@@ -17,22 +14,22 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ante-demo-store.ve
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Split Shop · Ante open demo",
+  title: "Split Shop · Plurel Pay open demo",
   description:
-    "An open reference storefront on Ante's production SDK in sandbox — build a cart, tap the Ante button, and split payment with friends. No real money moves.",
+    "An open reference storefront on Plurel Pay's production SDK in sandbox — build a cart, tap split with plurel, and split payment with friends. No real money moves.",
   openGraph: {
-    title: "Split Shop · Ante open demo",
+    title: "Split Shop · Plurel Pay open demo",
     description:
-      "Build a cart, tap the Ante button, and split payment with friends — sandbox only, no real money moves.",
+      "Build a cart, tap split with plurel, and split payment with friends — sandbox only, no real money moves.",
     url: SITE_URL,
-    siteName: "Ante",
+    siteName: "Plurel Pay",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Split Shop · Ante open demo",
+    title: "Split Shop · Plurel Pay open demo",
     description:
-      "Build a cart, tap the Ante button, and split payment with friends — sandbox only, no real money moves.",
+      "Build a cart, tap split with plurel, and split payment with friends — sandbox only, no real money moves.",
   },
 };
 

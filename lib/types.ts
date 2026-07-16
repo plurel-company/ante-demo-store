@@ -1,4 +1,4 @@
-import type { Cart } from "@splitante/sdk";
+import type { Cart } from "@plurel/sdk";
 
 import type { CurrencyCode } from "@/lib/currency";
 
@@ -31,13 +31,13 @@ export type Product = {
   currency: CurrencyCode;
   emoji: string;
   category: ProductCategory;
-  /** Absolute HTTPS URL — Ante hosted checkout loads this cross-origin. */
+  /** Absolute HTTPS URL — Plurel Pay hosted checkout loads this cross-origin. */
   imageUrl: string;
   lodging?: LodgingDetails;
   fees?: ProductFee[];
 };
 
-/** Cart line sent to Ante (amounts in cents). */
+/** Cart line sent to Plurel Pay (amounts in cents). */
 export type CartLine = {
   id: string;
   name: string;
@@ -70,7 +70,10 @@ export type ConfirmedOrder = {
 /** productId → quantity in the browser cart. */
 export type CartState = Record<string, number>;
 
-/** Cart payload for Ante SDK with optional product image URLs. */
-export type AnteCart = Cart & {
+/** Cart payload for Plurel Pay SDK with optional product image URLs. */
+export type PlurelCart = Cart & {
   items: (Cart["items"][number] & { image_url?: string })[];
 };
+
+/** @deprecated Use PlurelCart */
+export type AnteCart = PlurelCart;

@@ -1,4 +1,4 @@
-import type { CartFee } from "@splitante/sdk";
+import type { CartFee } from "@plurel/sdk";
 
 import { catalogInCurrency, PRODUCTS } from "@/lib/catalog";
 import {
@@ -7,7 +7,7 @@ import {
   type CurrencyCode,
   getMinimumOrderMinor,
 } from "@/lib/currency";
-import type { AnteCart, CartFeeLine, CartLine, CartState } from "@/lib/types";
+import type { PlurelCart, CartFeeLine, CartLine, CartState } from "@/lib/types";
 
 export function getCartCurrency(cart: CartState): CurrencyCode | null {
   for (const product of PRODUCTS) {
@@ -86,12 +86,12 @@ export function makeOrderRef(): string {
   return `ORD-${Date.now().toString(36).toUpperCase()}`;
 }
 
-/** Build the signed cart payload for Ante checkout (tax/shipping are demo approximations). */
-export function buildAnteCart(
+/** Build the signed cart payload for Plurel Pay checkout (tax/shipping are demo approximations). */
+export function buildPlurelCart(
   cart: CartState,
   orderRef: string,
   currency: CurrencyCode = "USD",
-): AnteCart | null {
+): PlurelCart | null {
   if (!Object.values(cart).some((qty) => qty > 0)) return null;
 
   const items = buildProductCartLines(cart, currency);
@@ -112,10 +112,13 @@ export function buildAnteCart(
   };
 }
 
+/** @deprecated Use buildPlurelCart */
+export const buildAnteCart = buildPlurelCart;
+
 export function cartMeetsMinimum(cart: CartState, currency: CurrencyCode = "USD"): boolean {
-  const anteCart = buildAnteCart(cart, "preview", currency);
-  if (!anteCart) return true;
-  return anteCart.total >= getMinimumOrderMinor(currency);
+  const plurelCart = buildPlurelCart(cart, "preview", currency);
+  if (!plurelCart) return true;
+  return plurelCart.total >= getMinimumOrderMinor(currency);
 }
 
 export function minimumOrderForCart(currency: CurrencyCode = "USD"): number {

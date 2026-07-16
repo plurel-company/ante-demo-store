@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for improving the Ante demo store. This project is a **reference implementation** for merchants integrating [Ante](https://splitante.com) — keep changes focused on clarity and correctness, not production storefront features.
+Thank you for improving the Plurel Pay demo store. This project is a **reference implementation** for merchants integrating [Plurel Pay](https://plurelpay.com) — keep changes focused on clarity and correctness, not production storefront features.
 
 ## Getting started
 
@@ -28,6 +28,6 @@ Run `pnpm typecheck` before opening a pull request.
 
 1. Describe the merchant-facing behavior you changed (or document-only updates).
 2. Confirm checkout still works in **Test** mode with sandbox credentials.
-3. Link related [Ante docs](https://splitante.com/docs) when adding integration patterns.
+3. Link related [Plurel Pay docs](https://plurelpay.com/docs) when adding integration patterns.
 
 Questions? Open an issue on GitHub.

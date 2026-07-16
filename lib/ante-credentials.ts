@@ -1,60 +1,67 @@
-/** Server-only Ante credential resolution and webhook verification. */
+/** Server-only Plurel Pay credential resolution and webhook verification. */
 import "server-only";
 
-import type { AnteCredentialMode } from "@/lib/ante-credential-mode";
+import type { PlurelCredentialMode } from "@/lib/ante-credential-mode";
+import { readEnv } from "@/lib/read-env";
 
-export type { AnteCredentialMode } from "@/lib/ante-credential-mode";
+export type { PlurelCredentialMode, AnteCredentialMode } from "@/lib/ante-credential-mode";
 export {
+  PLUREL_KEY_MODE_HEADER,
   ANTE_KEY_MODE_HEADER,
   keyModeMatches,
   modeLabel,
+  parsePlurelCredentialMode,
   parseAnteCredentialMode,
+  parseCredentialModeFromRequest,
 } from "@/lib/ante-credential-mode";
 
-export { listWebhookSecrets, verifyAnteWebhookSignature } from "@/lib/ante-webhook-verification";
+export {
+  listWebhookSecrets,
+  verifyPlurelWebhookSignature,
+  verifyAnteWebhookSignature,
+} from "@/lib/ante-webhook-verification";
 
-/** Unqualified env vars (no _TEST suffix) are the live credentials — matches typical Vercel setup. */
-export function resolvePublishableKey(mode: AnteCredentialMode): string {
+export function resolvePublishableKey(mode: PlurelCredentialMode): string {
   if (mode === "live") {
     return (
-      process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE?.trim() ||
-      process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY?.trim() ||
-      ""
+      readEnv("NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY_LIVE", "NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE") ||
+      readEnv("NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY", "NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY")
     );
   }
 
-  return process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST?.trim() || "";
+  return readEnv(
+    "NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY_TEST",
+    "NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST",
+  );
 }
 
-/** Server-only secret API key — required for session create/cancel (payments:write). */
-export function resolveSecretKey(mode: AnteCredentialMode): string {
+export function resolveSecretKey(mode: PlurelCredentialMode): string {
   if (mode === "live") {
     return (
-      process.env.ANTE_SECRET_KEY_LIVE?.trim() ||
-      process.env.ANTE_SECRET_KEY?.trim() ||
-      ""
+      readEnv("PLUREL_SECRET_KEY_LIVE", "ANTE_SECRET_KEY_LIVE") ||
+      readEnv("PLUREL_SECRET_KEY", "ANTE_SECRET_KEY")
     );
   }
 
-  return process.env.ANTE_SECRET_KEY_TEST?.trim() || "";
+  return readEnv("PLUREL_SECRET_KEY_TEST", "ANTE_SECRET_KEY_TEST");
 }
 
-export function resolveWebhookSecret(mode: AnteCredentialMode): string {
+export function resolveWebhookSecret(mode: PlurelCredentialMode): string {
   if (mode === "live") {
     return (
-      process.env.ANTE_WEBHOOK_SECRET_LIVE?.trim() || process.env.ANTE_WEBHOOK_SECRET?.trim() || ""
+      readEnv("PLUREL_WEBHOOK_SECRET_LIVE", "ANTE_WEBHOOK_SECRET_LIVE") ||
+      readEnv("PLUREL_WEBHOOK_SECRET", "ANTE_WEBHOOK_SECRET")
     );
   }
-  return process.env.ANTE_WEBHOOK_SECRET_TEST?.trim() || "";
+  return readEnv("PLUREL_WEBHOOK_SECRET_TEST", "ANTE_WEBHOOK_SECRET_TEST");
 }
 
 export function merchantId(): string {
-  return process.env.NEXT_PUBLIC_ANTE_MERCHANT_ID?.trim() ?? "";
+  return readEnv("NEXT_PUBLIC_PLUREL_MERCHANT_ID", "NEXT_PUBLIC_ANTE_MERCHANT_ID");
 }
 
-/** Shared signing secret — same value for test and live checkout on one merchant. */
 export function signingSecret(): string {
-  return process.env.ANTE_SIGNING_SECRET?.trim() ?? "";
+  return readEnv("PLUREL_SIGNING_SECRET", "ANTE_SIGNING_SECRET");
 }
 
 export function credentialAvailability(): {
@@ -69,19 +76,23 @@ export function credentialAvailability(): {
 } {
   return {
     merchantId: Boolean(merchantId()),
-    testKey: Boolean(process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST?.trim()),
-    liveKey: Boolean(
-      process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE?.trim() ||
-        process.env.NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY?.trim(),
+    testKey: Boolean(
+      readEnv("NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY_TEST", "NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST"),
     ),
-    testSecretKey: Boolean(process.env.ANTE_SECRET_KEY_TEST?.trim()),
+    liveKey: Boolean(
+      readEnv("NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY_LIVE", "NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE") ||
+        readEnv("NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY", "NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY"),
+    ),
+    testSecretKey: Boolean(readEnv("PLUREL_SECRET_KEY_TEST", "ANTE_SECRET_KEY_TEST")),
     liveSecretKey: Boolean(
-      process.env.ANTE_SECRET_KEY_LIVE?.trim() || process.env.ANTE_SECRET_KEY?.trim(),
+      readEnv("PLUREL_SECRET_KEY_LIVE", "ANTE_SECRET_KEY_LIVE") ||
+        readEnv("PLUREL_SECRET_KEY", "ANTE_SECRET_KEY"),
     ),
     signingSecret: Boolean(signingSecret()),
-    webhookTest: Boolean(process.env.ANTE_WEBHOOK_SECRET_TEST?.trim()),
+    webhookTest: Boolean(readEnv("PLUREL_WEBHOOK_SECRET_TEST", "ANTE_WEBHOOK_SECRET_TEST")),
     webhookLive: Boolean(
-      process.env.ANTE_WEBHOOK_SECRET_LIVE?.trim() || process.env.ANTE_WEBHOOK_SECRET?.trim(),
+      readEnv("PLUREL_WEBHOOK_SECRET_LIVE", "ANTE_WEBHOOK_SECRET_LIVE") ||
+        readEnv("PLUREL_WEBHOOK_SECRET", "ANTE_WEBHOOK_SECRET"),
     ),
   };
 }

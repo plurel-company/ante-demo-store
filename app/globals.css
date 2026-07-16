@@ -27,7 +27,7 @@
 }
 
 :root {
-  /* Ante brand (from splitante.com) */
+  /* Plurel Pay brand (from plurelpay.com) */
   --bg-1: #fafaf7;
   --bg-2: #f1efe9;
   --bg-3: #e9e6de;
@@ -93,7 +93,7 @@ body {
   font-variant-emoji: text;
 }
 
-/* ── Brand mark (the Ante orb, from splitante.com) ───────────────── */
+/* ── Brand mark (the Plurel Pay orb, from plurelpay.com) ─────────── */
 
 .orb-sphere {
   position: relative;
@@ -111,7 +111,7 @@ body {
     #6e2510 100%
   );
   /* Single inset shade only — NO outer drop shadow (it smudged into a boxy
-     halo a shade darker than the page). Matches splitante.com's orb exactly. */
+     halo a shade darker than the page). Matches plurelpay.com's orb exactly. */
   box-shadow: inset 0 -3px 6px rgba(110, 37, 16, 0.35);
 }
 
@@ -397,7 +397,7 @@ code {
   line-height: 1.45;
 }
 
-/* The Ante button stands on its own — no outlined frame behind the mark. */
+/* The Plurel Pay button stands on its own — no outlined frame behind the mark. */
 .checkout-ante-button-wrap {
   margin-top: 1rem;
 }
@@ -664,7 +664,7 @@ code {
   font-weight: 700;
 }
 
-/* ── Ante mode switch ─────────────────────────────────────────────── */
+/* ── Plurel Pay mode switch ─────────────────────────────────────── */
 
 .ante-mode-slider {
   -webkit-appearance: none;
@@ -783,7 +783,7 @@ code {
 }
 
 
-/* ── splitante.com chrome: page scaffold + halo ──────────────────── */
+/* ── plurelpay.com chrome: page scaffold + halo ──────────────────── */
 
 .store-page {
   position: relative;
@@ -841,7 +841,7 @@ code {
   }
 }
 
-/* ── splitante.com header: transparent sticky, centered nav pill ─── */
+/* ── plurelpay.com header: transparent sticky, centered nav pill ─── */
 
 .store-header {
   position: sticky;
@@ -984,7 +984,7 @@ code {
   }
 }
 
-/* ── splitante.com footer: dark band ─────────────────────────────── */
+/* ── plurelpay.com footer: dark band ─────────────────────────────── */
 
 .site-footer {
   background: var(--dark);
@@ -1113,7 +1113,8 @@ code {
 }
 
 /* The SDK modal's close button straddles the panel's rounded corner — pin it
-   cleanly inside. (SDK-owned element; override until @splitante/sdk adjusts.) */
+   cleanly inside. (SDK-owned element; override until @plurel/sdk adjusts.) */
+#plurel-checkout-modal .plurel-modal-close,
 #ante-checkout-modal .ante-modal-close {
   top: 14px !important;
   right: 14px !important;

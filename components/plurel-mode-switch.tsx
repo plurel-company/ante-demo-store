@@ -1,27 +1,23 @@
 "use client";
 
-import { modeLabel, useAnteMode } from "@/components/ante-mode-provider";
+import { modeLabel, usePlurelMode } from "@/components/plurel-mode-provider";
 
-function ModeBadge({ mode }: { mode: "sandbox" | "live" }) {
-  const isLive = mode === "live";
+function ModeBadge({ isLive }: { isLive: boolean }) {
   return (
     <span
       className={`ante-mode-badge ${isLive ? "ante-mode-badge--live" : "ante-mode-badge--sandbox"}`}
     >
-      {modeLabel(mode)} only
+      {isLive ? "Live" : "Test"}
     </span>
   );
 }
 
-export function AnteModeSwitch() {
-  const { mode, setMode, hasTestKey, hasLiveKey } = useAnteMode();
+export function PlurelModeSwitch() {
+  const { mode, setMode, hasTestKey, hasLiveKey } = usePlurelMode();
   const isLive = mode === "live";
-  const canToggle = hasTestKey && hasLiveKey;
-
-  if (!hasTestKey && !hasLiveKey) return null;
-  if (!canToggle) {
-    return <ModeBadge mode={hasLiveKey ? "live" : "sandbox"} />;
-  }
+  const sliderMax = hasTestKey && hasLiveKey ? 1 : 0;
+  const sliderValue = isLive && hasLiveKey ? 1 : 0;
+  const sliderDisabled = !hasTestKey || !hasLiveKey;
 
   return (
     <div className="ante-mode-switch">
@@ -29,24 +25,27 @@ export function AnteModeSwitch() {
         className={`ante-mode-label text-right ${!isLive ? "ante-mode-label--active" : "ante-mode-label--inactive"}`}
       >
         Test
+        {!isLive ? <ModeBadge isLive={false} /> : null}
       </span>
       <input
         type="range"
         min={0}
-        max={1}
+        max={sliderMax}
         step={1}
-        value={isLive ? 1 : 0}
+        value={sliderValue}
+        disabled={sliderDisabled}
+        aria-label="Plurel Pay key mode"
         onChange={(event) => setMode(Number(event.target.value) === 1 ? "live" : "sandbox")}
-        aria-label="Ante key mode"
-        aria-valuetext={isLive ? "Live" : "Test"}
         className="ante-mode-slider"
-        style={{ "--slider-fill": isLive ? "100%" : "0%" } as React.CSSProperties}
       />
       <span
         className={`ante-mode-label ${isLive ? "ante-mode-label--active" : "ante-mode-label--inactive"}`}
       >
         Live
+        {isLive ? <ModeBadge isLive /> : null}
       </span>
     </div>
   );
 }
+
+export { modeLabel };

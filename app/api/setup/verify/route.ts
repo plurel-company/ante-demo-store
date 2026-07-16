@@ -1,15 +1,14 @@
-/** POST /api/setup/verify — probe cart signing + Ante session API without leaving an open session. */
-import type { Cart } from "@splitante/sdk";
+/** POST /api/setup/verify — probe cart signing + Plurel Pay session API without leaving an open session. */
+import type { Cart } from "@plurel/sdk";
 
 import {
   merchantId,
   modeLabel,
-  parseAnteCredentialMode,
+  parseCredentialModeFromRequest,
   signingSecret,
-  ANTE_KEY_MODE_HEADER,
 } from "@/lib/ante-credentials";
-import { ANTE_API_BASE, secretKeyForSessions } from "@/lib/ante-upstream";
-import { explainAnteApiError } from "@/lib/ante-env";
+import { PLUREL_API_BASE, secretKeyForSessions } from "@/lib/ante-upstream";
+import { explainPlurelApiError } from "@/lib/ante-env";
 import { createCartSignature } from "@/lib/cart-signing";
 
 const PROBE_CART: Cart = {
@@ -20,7 +19,7 @@ const PROBE_CART: Cart = {
 };
 
 export async function POST(req: Request) {
-  const mode = parseAnteCredentialMode(req.headers.get(ANTE_KEY_MODE_HEADER));
+  const mode = parseCredentialModeFromRequest(req);
   const id = merchantId();
   const secret = signingSecret();
 
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
     return Response.json(
       {
         ok: false,
-        error: `Missing merchant ID or ANTE_SIGNING_SECRET.`,
+        error: `Missing merchant ID or PLUREL_SIGNING_SECRET (or ANTE_SIGNING_SECRET).`,
       },
       { status: 503 },
     );
@@ -44,12 +43,13 @@ export async function POST(req: Request) {
 
   const signature = createCartSignature(PROBE_CART, secret);
 
-  const response = await fetch(`${ANTE_API_BASE}/sessions`, {
+  const response = await fetch(`${PLUREL_API_BASE}/sessions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "X-Merchant-ID": id,
       "Content-Type": "application/json",
+      "X-Plurel-Signature": signature,
       "X-Ante-Signature": signature,
     },
     body: JSON.stringify({
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
   if (response.ok) {
     if (payload?.session_id) {
       await fetch(
-        `${ANTE_API_BASE}/sessions/${encodeURIComponent(payload.session_id)}/cancel`,
+        `${PLUREL_API_BASE}/sessions/${encodeURIComponent(payload.session_id)}/cancel`,
         {
           method: "POST",
           headers: {
@@ -86,15 +86,15 @@ export async function POST(req: Request) {
     });
   }
 
-  const apiError = payload?.error ?? `Ante API error (${response.status})`;
+  const apiError = payload?.error ?? `Plurel Pay API error (${response.status})`;
 
   return Response.json(
     {
       ok: false,
-      error: explainAnteApiError(apiError, response.status, payload?.details),
+      error: explainPlurelApiError(apiError, response.status, payload?.details),
       detail: apiError,
       details: payload?.details,
-      anteStatus: response.status,
+      plurelStatus: response.status,
     },
     { status: response.status >= 500 ? 503 : 403 },
   );
