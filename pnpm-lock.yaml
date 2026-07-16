@@ -4,19 +4,22 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@plurel/sdk': file:../ante-sdk/packages/core
+
 importers:
 
   .:
     dependencies:
+      '@plurel/react-sdk':
+        specifier: file:../ante-sdk/packages/react
+        version: file:../ante-sdk/packages/react(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@plurel/sdk':
+        specifier: file:../ante-sdk/packages/core
+        version: file:../ante-sdk/packages/core
       '@sentry/nextjs':
         specifier: ^10.63.0
         version: 10.63.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))(next@15.5.19(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(webpack@5.108.4)
-      '@splitante/react-sdk':
-        specifier: ^0.1.12
-        version: 0.1.12(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@splitante/sdk':
-        specifier: ^0.1.12
-        version: 0.1.12
       next:
         specifier: ^15.3.3
         version: 15.5.19(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -561,6 +564,17 @@ packages:
     resolution: {integrity: sha512-icc5xCzndZfhuJMy5oqk5AvloWquR7jtae74qzpkKkhGp8BivK+oCcEXgGnjCdTfp8hA44l+w8gE8yYJbocJJw==}
     engines: {node: '>=14'}
 
+  '@plurel/react-sdk@file:../ante-sdk/packages/react':
+    resolution: {directory: ../ante-sdk/packages/react, type: directory}
+    engines: {node: '>=20'}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+
+  '@plurel/sdk@file:../ante-sdk/packages/core':
+    resolution: {directory: ../ante-sdk/packages/core, type: directory}
+    engines: {node: '>=20'}
+
   '@rollup/plugin-commonjs@28.0.1':
     resolution: {integrity: sha512-+tNWdlWKbpB3WgBN7ijjYkq9X5uhjmcvyjEght4NmH5fAU++zfQzAJ6wumLS+dNcvwEZhKx2Z+skY8m7v0wGSA==}
     engines: {node: '>=16.0.0 || 14 >= 14.17'}
@@ -863,17 +877,6 @@ packages:
     engines: {node: '>= 18'}
     peerDependencies:
       webpack: '>=5.0.0'
-
-  '@splitante/react-sdk@0.1.12':
-    resolution: {integrity: sha512-Meynu/5MTo4prh4Gh987GEcTvKdQ47WrRIVw3q4IkkXmiCKwfTyyAzDHiL8mAnhEZGe+p6QPxxWLBcJgNGrvEQ==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      react: '>=18'
-      react-dom: '>=18'
-
-  '@splitante/sdk@0.1.12':
-    resolution: {integrity: sha512-sSYHCjbI8XOn3tK5TW7nkyIo3p/rbV0MJJfpFfDSgMnTAJwHJDxcYMCGX/7fPdsjYS4SdNT2RjOZx8G943w9HA==}
-    engines: {node: '>=20'}
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
@@ -2061,6 +2064,14 @@ snapshots:
 
   '@opentelemetry/semantic-conventions@1.42.0': {}
 
+  '@plurel/react-sdk@file:../ante-sdk/packages/react(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@plurel/sdk': file:../ante-sdk/packages/core
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+
+  '@plurel/sdk@file:../ante-sdk/packages/core': {}
+
   '@rollup/plugin-commonjs@28.0.1(rollup@4.62.2)':
     dependencies:
       '@rollup/pluginutils': 5.4.0(rollup@4.62.2)
@@ -2336,14 +2347,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-
-  '@splitante/react-sdk@0.1.12(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
-    dependencies:
-      '@splitante/sdk': 0.1.12
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-
-  '@splitante/sdk@0.1.12': {}
 
   '@swc/helpers@0.5.15':
     dependencies:

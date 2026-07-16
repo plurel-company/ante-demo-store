@@ -18,12 +18,12 @@ Official docs: [plurelpay.com/docs](https://plurelpay.com/docs)
 | --- | --- |
 | Product catalog + cart | `lib/catalog.ts`, `lib/cart.ts`, React context |
 | Server-side cart signing | `POST /api/cart/sign` with `@plurel/sdk/signing` |
-| Hosted checkout modal | `@plurel/react-sdk` (`PlurelButton` — CTA: **split with plurel**) |
+| Hosted checkout modal | `@plurel/react-sdk` (`PlurelButton`) |
 | Test vs live credentials | Header switch + `lib/ante-credentials.ts` |
 | Order fulfillment | `POST /api/webhooks/plurel` on `group.funded` |
 | Setup diagnostics | `GET /api/setup/status`, `POST /api/setup/verify` |
 
-Legacy `/api/ante/*` and `/api/webhooks/ante` routes remain as thin re-exports for existing webhook registrations.
+Legacy routes `/api/ante/v1/*` and `/api/webhooks/ante` re-export the Plurel paths for backward compatibility.
 
 ## Quick start
 
@@ -45,7 +45,7 @@ Use Stripe test card `4242 4242 4242 4242` inside the Plurel Pay modal. Pay ever
 
 ```
 Browser                         Next.js server                    Plurel Pay (plurelpay.com)
-───────                         ──────────────                    ──────────────────────────
+───────                         ──────────────                    ────────────────────────
 Cart state ──► buildPlurelCart ──► POST /api/cart/sign ──► HMAC ──► PlurelButton opens modal
                      │                    │                              │
                      │                    └── registerPendingOrder       │
@@ -63,7 +63,7 @@ Webhook poll ◄── GET /api/orders/[ref] ◄── markOrderFunded ◄──
 - Serverless / multi-instance hosts may route the webhook and the browser poll to **different** instances, so funding never appears in the UI.
 - There is no cross-region durability or replay protection beyond idempotent webhook handling in this route.
 
-**Production pattern:** persist orders in Postgres, Redis, or your OMS before opening checkout; fulfill inside the webhook with idempotent updates keyed by `order_ref` (and optionally `event.id`). The demo's fail-closed checks (registered pending order, matching credential mode, minimum `total`) should carry over unchanged.
+**Production pattern:** persist orders in Postgres, Redis, or your OMS before opening checkout; fulfill inside the webhook with idempotent updates keyed by `order_ref` (and optionally `event.id`). The demo’s fail-closed checks (registered pending order, matching credential mode, minimum `total`) should carry over unchanged.
 
 | Pattern | Demo behavior | Production recommendation |
 | --- | --- | --- |
@@ -72,34 +72,38 @@ Webhook poll ◄── GET /api/orders/[ref] ◄── markOrderFunded ◄──
 | Order fulfillment | Requires a registered **pending** order + valid `total` | Fail closed on unknown `order_ref` or underpayment |
 | Order store | In-memory map | Durable database with idempotent webhook handling |
 
-See [`lib/ante-credentials.ts`](./lib/ante-credentials.ts) (`verifyPlurelWebhookSignature`) and [`app/api/webhooks/plurel/route.ts`](./app/api/webhooks/plurel/route.ts).
+See [`lib/ante-webhook-verification.ts`](./lib/ante-webhook-verification.ts) and [`app/api/webhooks/plurel/route.ts`](./app/api/webhooks/plurel/route.ts).
 
 ## Environment variables
 
-Primary names use the `PLUREL_*` prefix. Legacy `ANTE_*` / `NEXT_PUBLIC_ANTE_*` names still work as fallbacks.
+Use `PLUREL_*` names in new deployments. Legacy `ANTE_*` / `NEXT_PUBLIC_ANTE_*` env vars are still read as fallbacks.
 
 | Variable | Where | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_PLUREL_MERCHANT_ID` | Client | `plurel_merch_*` from dashboard |
-| `NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY` | Client | **Live** — `plurel_pk_live_*` (Vercel Production/Preview) |
-| `NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY_TEST` | Client | **Test** — `plurel_pk_test_*` for sandbox checkout |
+| `NEXT_PUBLIC_PLUREL_MERCHANT_ID` | Client | `plurel_merch_*` (or legacy `ante_merch_*`) |
+| `NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY` | Client | **Live** publishable key |
+| `NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY_TEST` | Client | **Test** publishable key |
 | `NEXT_PUBLIC_SITE_URL` | Client | Origin for absolute product image URLs |
-| `PLUREL_SIGNING_SECRET` | Server only | `plurel_sign_*` for cart HMAC (shared across modes) |
-| `PLUREL_SECRET_KEY` | Server only | **Live** — `plurel_sk_live_*` for session create/cancel (payments:write) |
-| `PLUREL_SECRET_KEY_TEST` | Server only | **Test** — `plurel_sk_test_*` for sandbox sessions |
-| `PLUREL_WEBHOOK_SECRET` | Server only | **Live** — `whsec_*` for live webhook deliveries |
-| `PLUREL_WEBHOOK_SECRET_TEST` | Server only | **Test** — `whsec_*` for sandbox webhooks |
-| `NEXT_PUBLIC_SENTRY_DSN` | Client | Optional — Sentry error reporting (checkout failures, etc.) |
+| `PLUREL_SIGNING_SECRET` | Server only | Cart HMAC signing secret |
+| `PLUREL_SECRET_KEY` | Server only | **Live** secret key for session create/cancel |
+| `PLUREL_SECRET_KEY_TEST` | Server only | **Test** secret key |
+| `PLUREL_WEBHOOK_SECRET` | Server only | **Live** webhook secret |
+| `PLUREL_WEBHOOK_SECRET_TEST` | Server only | **Test** webhook secret |
 
-Optional aliases: `NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY_LIVE`, `PLUREL_WEBHOOK_SECRET_LIVE`, `PLUREL_SECRET_KEY_LIVE`, `SENTRY_DSN`. Legacy `ANTE_*` / `NEXT_PUBLIC_ANTE_*` equivalents are also accepted.
+The browser SDK uses the **publishable** key. Session create/cancel is proxied through `/api/plurel/v1` and authenticated upstream with the **secret** key.
 
-The browser SDK still uses the **publishable** key. Session create/cancel is proxied through `/api/plurel/v1` and authenticated upstream with the **secret** key (`payments:write`).
+See [`.env.example`](./.env.example) for commented templates including legacy `ANTE_*` aliases.
 
-Use the **Test / Live** switch in the store header to pick which publishable key the SDK uses. Your choice is remembered in the browser.
+## SDK dependency
 
-Never commit real secrets. Never put signing or webhook secrets in client code.
+This repo links to the local monorepo by default:
 
-See [`.env.example`](./.env.example) for commented templates.
+```json
+"@plurel/sdk": "file:../ante-sdk/packages/core",
+"@plurel/react-sdk": "file:../ante-sdk/packages/react"
+```
+
+Switch to `"@plurel/sdk": "1.0.0"` once published to npm.
 
 ## Webhooks (local dev)
 
@@ -109,61 +113,33 @@ Plurel Pay needs a public HTTPS URL. Use a tunnel (ngrok, Cloudflare Tunnel, etc
 ngrok http 3000
 ```
 
-Register `https://YOUR_TUNNEL/api/webhooks/plurel` in the merchant dashboard and subscribe to `group.funded`. The legacy path `/api/webhooks/ante` also works.
+Register `https://YOUR_TUNNEL/api/webhooks/plurel` in the merchant dashboard and subscribe to `group.funded`.
 
 ## Troubleshooting checkout
 
-### `Invalid cart signature (X-Plurel-Signature)`
+### `Invalid cart signature`
 
-Plurel Pay returns this with a `details` array listing common causes. It does **not** always mean the signing secret is wrong.
-
-1. Use **`PLUREL_SIGNING_SECRET`** (`plurel_sign_…`) — not `plurel_sk_…` or `whsec_…`.
-2. Copy the **full** secret, redeploy after env changes, and update immediately if you rotated in the dashboard.
-3. Sign with **`createCartSignature`** from `@plurel/sdk/signing` (**≥ 1.0.0**). Plurel Pay always includes `fees: []` in the HMAC when the cart has no custom fees.
+1. Use **`PLUREL_SIGNING_SECRET`** (or legacy `ANTE_SIGNING_SECRET`) — not secret or webhook keys.
+2. Copy the **full** secret, redeploy after env changes.
+3. Sign with **`createCartSignature`** from `@plurel/sdk/signing` (**≥ 1.0.0**).
 4. Re-sign at checkout click if the cart changed after signing.
 
 Docs: [Cart signing](https://plurelpay.com/docs/cart-signing) · [Troubleshooting](https://plurelpay.com/docs/troubleshooting)
-
-Use **Verify credentials** on the storefront, or:
-
-```bash
-curl -X POST http://localhost:3000/api/setup/verify \
-  -H "x-plurel-key-mode: sandbox"
-```
-
-### `PLUREL_SIGNING_SECRET is not configured`
-
-Add the server env var on your deployment. Local dev: copy `.env.example` → `.env.local`.
-
-### `API key missing scope: payments:write`
-
-Publishable keys (`plurel_pk_*`) are read-only. Session create needs `payments:write`, which only secret keys (`plurel_sk_*`) have. Add `PLUREL_SECRET_KEY_TEST` (sandbox) and/or `PLUREL_SECRET_KEY` (live) on the server. This demo proxies `/api/plurel/v1/sessions` and swaps in the secret key upstream — the browser never sees it.
 
 ## Project layout
 
 ```
 app/
-  page.tsx                      # Storefront shell + credential gate
-  api/cart/sign/route.ts        # Cart HMAC signing
-  api/setup/status/route.ts     # Env configuration check
-  api/setup/verify/route.ts     # Probe Plurel Pay credentials
-  api/webhooks/plurel/route.ts  # Webhook verification + fulfillment
-  api/plurel/v1/[...path]/route.ts # Same-origin session proxy
-  api/orders/[orderRef]/route.ts # Order status polling
+  api/plurel/v1/[...path]/route.ts   # Session API proxy (primary)
+  api/ante/v1/[...path]/route.ts     # Legacy alias
+  api/webhooks/plurel/route.ts       # Webhook fulfillment (primary)
+  api/webhooks/ante/route.ts         # Legacy alias
 components/
-  plurel-mode-provider.tsx      # Test/live key switch context
-  ui/format-usd.ts              # Shared USD display helper
-  store/                        # Product cards (UI agents)
+  plurel-mode-provider.tsx           # Test/live credential switch
+  checkout-panel.tsx                 # PlurelButton + cart summary
 lib/
-  types.ts                      # Shared TypeScript types
-  catalog.ts                    # Demo product catalog
-  cart.ts                       # Cart → Plurel payload builders
-  store.ts                      # Barrel re-export
-  cart-signing.ts               # SDK signing re-export
-  ante-credentials.ts           # Test/live env resolution
-  ante-env.ts                   # Key parsing + error messages
-  order-store.ts                # In-memory pending/funded orders
-hooks/use-order-funding-poll.ts  # Poll until webhook marks funded
+  cart.ts                            # Cart → Plurel payload builders
+  ante-credentials.ts                # PLUREL_* env with ANTE_* fallbacks
 ```
 
 ## Scripts
@@ -174,14 +150,6 @@ hooks/use-order-funding-poll.ts  # Poll until webhook marks funded
 | `pnpm build` | Production build |
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm test` | Unit tests (`lib/*.test.ts`) |
-
-## Deploy
-
-Works on Vercel or any Node 20+ host. Set the same env vars in your deployment dashboard.
-
-## Contributing
-
-This is a reference implementation maintained by Plurel. The repo is public for **read and clone**; direct pushes to `main` are limited to Plurel org maintainers. If you are integrating Plurel Pay in your own stack, fork the repo or copy patterns into your codebase. PRs from forks that improve integration clarity are welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Links
 

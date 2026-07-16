@@ -1,5 +1,8 @@
-allowBuilds:
-  sharp: set this to true or false
-minimumReleaseAgeExclude:
+packages:
+  - .
+onlyBuiltDependencies:
   - '@plurel/react-sdk@1.0.0'
   - '@plurel/sdk@1.0.0'
+
+overrides:
+  '@plurel/sdk': 'file:../ante-sdk/packages/core'
