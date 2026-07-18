@@ -11,7 +11,8 @@ import { ProductGrid } from "@/components/product-grid";
    cross-site fetch ever leaves the browser — some devices block those outright.
    The hosted checkout loads from plurelpay.com (or a vercel.app alias fallback). */
 const DEFAULT_PAY_BASE = "https://plurelpay.com";
-const FALLBACK_PAY_BASE = "https://ante-tabby-ante.vercel.app";
+/** Vercel alias fallback — update if the plurelpay-web project's default domain changes. */
+const FALLBACK_PAY_BASE = "https://plurelpay-web-tabby-ante.vercel.app";
 
 /** The SDK's checkout iframe ships allow="payment *; clipboard-write" — without
  *  `web-share` the browser blocks navigator.share inside it, so the checkout's

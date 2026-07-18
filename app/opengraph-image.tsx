@@ -27,7 +27,7 @@ export default function Image() {
               borderRadius: "50%",
               background:
                 "radial-gradient(circle at 34% 30%, #FFE0CB 0%, #FFB48A 18%, #E66A37 52%, #B8421A 82%, #6E2510 100%)",
-              boxShadow: "0 0 0 10px rgba(215,82,30,0.14)",
+              boxShadow: "0 0 0 10px rgba(242, 106, 46,0.14)",
             }}
           />
           <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em" }}>Plurel Pay</div>

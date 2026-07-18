@@ -5,7 +5,7 @@ import { modeLabel, usePlurelMode } from "@/components/plurel-mode-provider";
 function ModeBadge({ isLive }: { isLive: boolean }) {
   return (
     <span
-      className={`ante-mode-badge ${isLive ? "ante-mode-badge--live" : "ante-mode-badge--sandbox"}`}
+      className={`plurel-mode-badge ${isLive ? "plurel-mode-badge--live" : "plurel-mode-badge--sandbox"}`}
     >
       {isLive ? "Live" : "Test"}
     </span>
@@ -20,9 +20,9 @@ export function PlurelModeSwitch() {
   const sliderDisabled = !hasTestKey || !hasLiveKey;
 
   return (
-    <div className="ante-mode-switch">
+    <div className="plurel-mode-switch">
       <span
-        className={`ante-mode-label text-right ${!isLive ? "ante-mode-label--active" : "ante-mode-label--inactive"}`}
+        className={`plurel-mode-label text-right ${!isLive ? "plurel-mode-label--active" : "plurel-mode-label--inactive"}`}
       >
         Test
         {!isLive ? <ModeBadge isLive={false} /> : null}
@@ -36,10 +36,10 @@ export function PlurelModeSwitch() {
         disabled={sliderDisabled}
         aria-label="Plurel Pay key mode"
         onChange={(event) => setMode(Number(event.target.value) === 1 ? "live" : "sandbox")}
-        className="ante-mode-slider"
+        className="plurel-mode-slider"
       />
       <span
-        className={`ante-mode-label ${isLive ? "ante-mode-label--active" : "ante-mode-label--inactive"}`}
+        className={`plurel-mode-label ${isLive ? "plurel-mode-label--active" : "plurel-mode-label--inactive"}`}
       >
         Live
         {isLive ? <ModeBadge isLive /> : null}
