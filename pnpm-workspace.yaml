@@ -1,8 +1,16 @@
 packages:
   - .
-onlyBuiltDependencies:
-  - '@plurel/react-sdk@1.0.0'
-  - '@plurel/sdk@1.0.0'
 
-overrides:
-  '@plurel/sdk': 'file:../ante-sdk/packages/core'
+# pnpm 10.26+ / 11: explicit allow list for dependency install scripts.
+allowBuilds:
+  "@sentry/cli": true
+  esbuild: true
+  sharp: true
+
+# Kept for pnpm 10.x before allowBuilds (Vercel may use 10.x by project age).
+onlyBuiltDependencies:
+  - "@sentry/cli"
+  - esbuild
+  - sharp
+  - "@plurel/react-sdk"
+  - "@plurel/sdk"
