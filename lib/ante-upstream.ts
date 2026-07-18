@@ -1,46 +1,56 @@
-/** Server-side Ante REST helpers — upstream auth uses secret keys (payments:write). */
+/** Server-side Plurel Pay REST helpers — upstream auth uses secret keys (payments:write). */
 import "server-only";
 
-import type { AnteCredentialMode } from "@/lib/ante-credential-mode";
+import type { PlurelCredentialMode } from "@/lib/ante-credential-mode";
 import { merchantId, resolveSecretKey } from "@/lib/ante-credentials";
-import {
-  correctStaleSdkVersionHeaders,
-} from "@/lib/installed-sdk-versions";
+import { correctStaleSdkVersionHeaders } from "@/lib/installed-sdk-versions";
+import { readEnv } from "@/lib/read-env";
 
-export const ANTE_API_BASE = "https://splitante.com/api/v1";
+export const PLUREL_API_BASE =
+  readEnv("PLUREL_API_BASE", "ANTE_API_BASE") || "https://plurelpay.com/api/v1";
+
+/** @deprecated Use PLUREL_API_BASE */
+export const ANTE_API_BASE = PLUREL_API_BASE;
 
 const FORWARD_HEADERS = [
   "content-type",
+  "x-plurel-signature",
   "x-ante-signature",
+  "x-plurel-cart-signature",
   "x-ante-cart-signature",
+  "x-plurel-sdk-version",
   "x-ante-sdk-version",
+  "x-plurel-react-sdk-version",
   "x-ante-react-sdk-version",
 ] as const;
 
-export function secretKeyForSessions(mode: AnteCredentialMode): string {
+function isSecretKey(value: string): boolean {
+  return value.startsWith("plurel_sk_") || value.startsWith("ante_sk_");
+}
+
+export function secretKeyForSessions(mode: PlurelCredentialMode): string {
   const secretKey = resolveSecretKey(mode);
   if (!secretKey) {
     throw new Error(
       mode === "live"
-        ? "ANTE_SECRET_KEY or ANTE_SECRET_KEY_LIVE is not configured. Session create requires a server secret key (ante_sk_live_*)."
-        : "ANTE_SECRET_KEY_TEST is not configured. Session create requires a server secret key (ante_sk_test_*).",
+        ? "PLUREL_SECRET_KEY (or ANTE_SECRET_KEY) is not configured. Session create requires a server secret key (plurel_sk_live_*)."
+        : "PLUREL_SECRET_KEY_TEST (or ANTE_SECRET_KEY_TEST) is not configured. Session create requires a server secret key (plurel_sk_test_*).",
     );
   }
-  if (!secretKey.startsWith("ante_sk_")) {
-    throw new Error("Secret API key should start with ante_sk_test_ or ante_sk_live_.");
+  if (!isSecretKey(secretKey)) {
+    throw new Error("Secret API key should start with plurel_sk_test_ / plurel_sk_live_ (or legacy ante_sk_*).");
   }
   return secretKey;
 }
 
-/** Build upstream headers for /sessions* — swaps publishable bearer for secret key server-side. */
 export function buildUpstreamSessionHeaders(
-  mode: AnteCredentialMode,
+  mode: PlurelCredentialMode,
   request: Request,
 ): Headers {
   const secretKey = secretKeyForSessions(mode);
   const id = merchantId();
   if (!id) {
-    throw new Error("NEXT_PUBLIC_ANTE_MERCHANT_ID is not configured.");
+    throw new Error("NEXT_PUBLIC_PLUREL_MERCHANT_ID (or NEXT_PUBLIC_ANTE_MERCHANT_ID) is not configured.");
   }
 
   const headers = new Headers();

@@ -1,5 +1,16 @@
+packages:
+  - .
+
+# pnpm 10.26+ / 11: explicit allow list for dependency install scripts.
 allowBuilds:
-  sharp: set this to true or false
-minimumReleaseAgeExclude:
-  - '@splitante/react-sdk@0.1.12'
-  - '@splitante/sdk@0.1.12'
+  "@sentry/cli": true
+  esbuild: true
+  sharp: true
+
+# Kept for pnpm 10.x before allowBuilds (Vercel may use 10.x by project age).
+onlyBuiltDependencies:
+  - "@sentry/cli"
+  - esbuild
+  - sharp
+  - "@plurel/react-sdk"
+  - "@plurel/sdk"

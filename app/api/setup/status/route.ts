@@ -2,17 +2,16 @@
 import {
   credentialAvailability,
   merchantId,
-  parseAnteCredentialMode,
+  parseCredentialModeFromRequest,
   resolvePublishableKey,
   resolveSecretKey,
   resolveWebhookSecret,
   signingSecret,
-  ANTE_KEY_MODE_HEADER,
 } from "@/lib/ante-credentials";
 import { publishableKeyMode, validateCredentialShapes } from "@/lib/ante-env";
 
 export async function GET(req: Request) {
-  const mode = parseAnteCredentialMode(req.headers.get(ANTE_KEY_MODE_HEADER));
+  const mode = parseCredentialModeFromRequest(req);
   const id = merchantId();
   const publishableKey = resolvePublishableKey(mode);
   const secret = signingSecret();
@@ -28,32 +27,32 @@ export async function GET(req: Request) {
   });
 
   if (!id) {
-    issues.push("Set NEXT_PUBLIC_ANTE_MERCHANT_ID (ante_merch_… from the dashboard).");
+    issues.push("Set NEXT_PUBLIC_PLUREL_MERCHANT_ID (or NEXT_PUBLIC_ANTE_MERCHANT_ID) — plurel_merch_… from the dashboard.");
   }
   if (!publishableKey) {
     issues.push(
       mode === "live"
-        ? "Set NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY or NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_LIVE (ante_pk_live_*)."
-        : "Set NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST (ante_pk_test_*).",
+        ? "Set NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY (or NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY) — plurel_pk_live_*."
+        : "Set NEXT_PUBLIC_PLUREL_PUBLISHABLE_KEY_TEST (or NEXT_PUBLIC_ANTE_PUBLISHABLE_KEY_TEST) — plurel_pk_test_*.",
     );
   }
   if (!secret) {
     issues.push(
-      "Set ANTE_SIGNING_SECRET on the server (Developers → Signing). Without it, checkout cannot sign carts.",
+      "Set PLUREL_SIGNING_SECRET (or ANTE_SIGNING_SECRET) on the server (Developers → Signing). Without it, checkout cannot sign carts.",
     );
   }
   if (!secretKey) {
     issues.push(
       mode === "live"
-        ? "Set ANTE_SECRET_KEY or ANTE_SECRET_KEY_LIVE (ante_sk_live_*) on the server. Session create requires payments:write."
-        : "Set ANTE_SECRET_KEY_TEST (ante_sk_test_*) on the server. Session create requires payments:write.",
+        ? "Set PLUREL_SECRET_KEY (or ANTE_SECRET_KEY) — plurel_sk_live_* on the server. Session create requires payments:write."
+        : "Set PLUREL_SECRET_KEY_TEST (or ANTE_SECRET_KEY_TEST) — plurel_sk_test_* on the server. Session create requires payments:write.",
     );
   }
   if (!webhookSecret) {
     issues.push(
       mode === "live"
-        ? "Optional: set ANTE_WEBHOOK_SECRET or ANTE_WEBHOOK_SECRET_LIVE (whsec_…) for live group.funded events."
-        : "Optional: set ANTE_WEBHOOK_SECRET_TEST (whsec_…) for test webhooks.",
+        ? "Optional: set PLUREL_WEBHOOK_SECRET (or ANTE_WEBHOOK_SECRET) — whsec_… for live group.funded events."
+        : "Optional: set PLUREL_WEBHOOK_SECRET_TEST (or ANTE_WEBHOOK_SECRET_TEST) — whsec_… for test webhooks.",
     );
   }
 

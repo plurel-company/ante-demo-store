@@ -2,7 +2,7 @@ import type { CurrencyCode } from "@/lib/currency";
 import { CURRENCY_ORDER, convertFromUsd, getMinimumOrderMinor } from "@/lib/currency";
 import type { Product, ProductCategory } from "@/lib/types";
 
-/** Public site origin for absolute product image URLs (Ante hosted checkout). */
+/** Public site origin for absolute product image URLs (Plurel Pay hosted checkout). */
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
   "https://ante-demo-store.vercel.app";
@@ -11,7 +11,7 @@ function productImageUrl(filename: string): string {
   return `${SITE_URL}/products/${filename}`;
 }
 
-/** Stable Unsplash hotlinks (same pattern as the splitante.com catalog seed) —
+/** Stable Unsplash hotlinks (same pattern as the plurelpay.com catalog seed) —
  *  real photography is what makes the demo read as a real store. */
 function unsplash(id: string): string {
   return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1000&q=72`;
@@ -22,7 +22,7 @@ function pexels(id: string): string {
   return `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1000`;
 }
 
-/** Ante default minimum order for USD (matches splitante.com merchant settings). */
+/** Plurel Pay default minimum order for USD (matches plurelpay.com merchant settings). */
 export const MINIMUM_ORDER_CENTS = getMinimumOrderMinor("USD");
 
 export const PRODUCT_SECTIONS: { id: ProductCategory; title: string; subtitle: string }[] = [

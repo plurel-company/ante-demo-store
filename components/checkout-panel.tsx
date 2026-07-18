@@ -1,18 +1,18 @@
 "use client";
 
-import { AnteButton, type Cart } from "@splitante/react-sdk";
+import { PlurelButton, type Cart } from "@plurel/react-sdk";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useCart } from "@/components/cart-context";
-import { useAnteMode } from "@/components/ante-mode-provider";
+import { usePlurelMode } from "@/components/plurel-mode-provider";
 import { CurrencyBadge } from "@/components/store/CurrencyBadge";
 import { OrderConfirmation } from "@/components/order-confirmation";
 import { useOrderFundingPoll } from "@/hooks/use-order-funding-poll";
-import { explainAnteApiError } from "@/lib/ante-env";
+import { explainPlurelApiError } from "@/lib/ante-env";
 import type { FundedOrder } from "@/lib/order-store";
 import { formatMoney } from "@/components/ui/format-money";
 import {
-  buildAnteCart,
+  buildPlurelCart,
   buildCartFeeSummary,
   buildProductCartLines,
   cartMeetsMinimum,
@@ -27,7 +27,7 @@ import { fetchFundedOrder } from "@/hooks/use-order-funding-poll";
 import { reportClientError } from "@/lib/report-client-error";
 
 function checkoutErrorMessage(error: Error): string {
-  return explainAnteApiError(error.message);
+  return explainPlurelApiError(error.message);
 }
 
 function fundedOrderToConfirmed(order: FundedOrder, currency: CurrencyCode): ConfirmedOrder {
@@ -59,31 +59,29 @@ function isErrorStatus(status: string | null): boolean {
 
 export function CheckoutPanel() {
   const { cart, itemCount, subtotal, currency, clearCart } = useCart();
-  const { modeHeaders, mode, publishableKey, apiFallback, enableApiFallback } = useAnteMode();
+  const { modeHeaders, mode, publishableKey, apiFallback, enableApiFallback } = usePlurelMode();
   const [orderRef, setOrderRef] = useState(makeOrderRef);
   const [status, setStatus] = useState<string | null>(null);
   const [confirmedOrder, setConfirmedOrder] = useState<ConfirmedOrder | null>(null);
   const [pollingOrderRef, setPollingOrderRef] = useState<string | null>(null);
-  const anteButtonWrapRef = useRef<HTMLDivElement | null>(null);
+  const plurelButtonWrapRef = useRef<HTMLDivElement | null>(null);
   const [autoRetry, setAutoRetry] = useState(false);
 
-  // After a network failure flips the SDK to the backup route, the provider
-  // remounts — re-fire the checkout automatically so one tap is enough.
   useEffect(() => {
     if (!autoRetry || !apiFallback) return;
     setAutoRetry(false);
     const timer = setTimeout(() => {
-      anteButtonWrapRef.current?.querySelector("button")?.click();
+      plurelButtonWrapRef.current?.querySelector("button")?.click();
     }, 500);
     return () => clearTimeout(timer);
   }, [autoRetry, apiFallback]);
 
   const cartLines = useMemo(() => buildProductCartLines(cart, currency), [cart, currency]);
-  const anteCart = useMemo(() => buildAnteCart(cart, orderRef, currency), [cart, currency, orderRef]);
+  const plurelCart = useMemo(() => buildPlurelCart(cart, orderRef, currency), [cart, currency, orderRef]);
   const feeLines = useMemo(() => buildCartFeeSummary(cart, currency), [cart, currency]);
-  const tax = anteCart?.tax ?? 0;
-  const shipping = anteCart?.shipping ?? 0;
-  const total = anteCart?.total ?? 0;
+  const tax = plurelCart?.tax ?? 0;
+  const shipping = plurelCart?.shipping ?? 0;
+  const total = plurelCart?.total ?? 0;
   const displayCurrency = currency;
   const minimumOrder = minimumOrderForCart(currency);
   const belowMinimum = total > 0 && !cartMeetsMinimum(cart, currency);
@@ -112,7 +110,7 @@ export function CheckoutPanel() {
 
   const confirmFromSdk = useCallback(
     (ref: string, sessionId: string) => {
-      if (!anteCart) return;
+      if (!plurelCart) return;
       const feeSummary = buildCartFeeSummary(cart, currency);
       setConfirmedOrder({
         orderRef: ref,
@@ -121,9 +119,9 @@ export function CheckoutPanel() {
         lines: buildProductCartLines(cart, currency),
         fees: feeSummary.length > 0 ? feeSummary : undefined,
         subtotal: cartSubtotal(cart, currency),
-        tax: anteCart.tax ?? 0,
-        shipping: anteCart.shipping ?? 0,
-        total: anteCart.total,
+        tax: plurelCart.tax ?? 0,
+        shipping: plurelCart.shipping ?? 0,
+        total: plurelCart.total,
         confirmedAt: Date.now(),
         confirmedVia: "sdk",
       });
@@ -131,7 +129,7 @@ export function CheckoutPanel() {
       clearCart();
       setStatus(null);
     },
-    [anteCart, cart, clearCart, currency],
+    [plurelCart, cart, clearCart, currency],
   );
 
   const waitForWebhookConfirmation = useCallback(
@@ -207,7 +205,7 @@ export function CheckoutPanel() {
           </span>
           <h2 className="text-lg font-medium tracking-[-0.02em] text-ink">Your cart is empty</h2>
           <p className="mt-1.5 max-w-[14rem] text-sm leading-relaxed text-ink-3">
-            Add items from one currency region, then split the total with Ante group pay.
+            Add items from one currency region, then split the total with Plurel Pay group checkout.
           </p>
         </div>
       </aside>
@@ -305,11 +303,11 @@ export function CheckoutPanel() {
         </div>
       ) : null}
 
-      {anteCart ? (
-        <div className="checkout-ante-button-wrap" ref={anteButtonWrapRef}>
-          <AnteButton
+      {plurelCart ? (
+        <div className="checkout-ante-button-wrap" ref={plurelButtonWrapRef}>
+          <PlurelButton
             getSignature={signCart}
-            cart={anteCart}
+            cart={plurelCart}
             group={{ minSize: 2, maxSize: 6, defaultMode: "equal" }}
             disabled={belowMinimum || pollingOrderRef !== null}
             appearance={{ fullWidth: true, size: "lg" }}
@@ -339,7 +337,7 @@ export function CheckoutPanel() {
                   enableApiFallback();
                   setAutoRetry(true);
                   setStatus(
-                    "Network hiccup — retrying over a backup connection… If nothing opens, tap Split with Ante again.",
+                    "Network hiccup — retrying over a backup connection… If nothing opens, tap split with plurel again.",
                   );
                   return;
                 }
@@ -360,9 +358,9 @@ export function CheckoutPanel() {
       ) : null}
 
       <p className="checkout-footnote">
-        Checkout uses <strong>{mode === "live" ? "live" : "test"}</strong> Ante keys. One currency
-        per cart. Order confirmation appears after Ante sends <code>group.funded</code> to{" "}
-        <code>/api/webhooks/ante</code>.
+        Checkout uses <strong>{mode === "live" ? "live" : "test"}</strong> Plurel Pay keys. One currency
+        per cart. Order confirmation appears after Plurel Pay sends <code>group.funded</code> to{" "}
+        <code>/api/webhooks/plurel</code>.
       </p>
     </aside>
   );

@@ -1,4 +1,4 @@
-/** Supported checkout currencies — one currency per Ante cart. */
+/** Supported checkout currencies — one currency per Plurel Pay cart. */
 export type CurrencyCode = "USD" | "EUR" | "GBP" | "JPY";
 
 export const CURRENCY_ORDER: CurrencyCode[] = ["USD", "EUR", "GBP", "JPY"];

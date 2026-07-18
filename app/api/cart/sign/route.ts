@@ -1,19 +1,24 @@
-/** POST /api/cart/sign — HMAC-sign cart with ANTE_SIGNING_SECRET; registers pending order. */
-import type { Cart } from "@splitante/sdk";
+/** POST /api/cart/sign — HMAC-sign cart with PLUREL_SIGNING_SECRET; registers pending order. */
+import type { Cart } from "@plurel/sdk";
 
 import {
-  ANTE_KEY_MODE_HEADER,
+  PLUREL_KEY_MODE_HEADER,
   credentialModeFromPublishableKey,
   keyModeMatches,
-  parseAnteCredentialMode,
+  parsePlurelCredentialMode,
 } from "@/lib/ante-credential-mode";
+import { signingSecret } from "@/lib/ante-credentials";
 import { createCartSignature } from "@/lib/cart-signing";
 import { registerPendingOrder } from "@/lib/order-store";
 
-/** Map signed Ante cart → in-memory pending order (keyed by metadata.order_ref). */
+function isSigningSecret(value: string): boolean {
+  return value.startsWith("plurel_sign_") || value.startsWith("ante_sign_");
+}
+
+/** Map signed Plurel cart → in-memory pending order (keyed by metadata.order_ref). */
 function pendingFromCart(
   cart: Cart,
-  credentialMode: ReturnType<typeof parseAnteCredentialMode>,
+  credentialMode: ReturnType<typeof parsePlurelCredentialMode>,
 ) {
   const orderRef = cart.metadata?.order_ref;
   if (!orderRef) return null;
@@ -49,22 +54,22 @@ function pendingFromCart(
 }
 
 export async function POST(req: Request) {
-  const signingSecret = process.env.ANTE_SIGNING_SECRET?.trim();
-  if (!signingSecret) {
+  const secret = signingSecret();
+  if (!secret) {
     return Response.json(
       {
         error:
-          "ANTE_SIGNING_SECRET is not configured on this deployment. Copy your signing secret from Ante → Developers → Signing and add it in Vercel/host env vars.",
+          "PLUREL_SIGNING_SECRET (or ANTE_SIGNING_SECRET) is not configured on this deployment. Copy your signing secret from Plurel Pay → Developers → Signing and add it in Vercel/host env vars.",
       },
       { status: 503 },
     );
   }
 
-  if (!signingSecret.startsWith("ante_sign_")) {
+  if (!isSigningSecret(secret)) {
     return Response.json(
       {
         error:
-          "ANTE_SIGNING_SECRET looks invalid (expected ante_sign_…). Copy the full value from Ante → Developers → Signing.",
+          "Signing secret looks invalid (expected plurel_sign_… or ante_sign_…). Copy the full value from Plurel Pay → Developers → Signing.",
       },
       { status: 500 },
     );
@@ -88,11 +93,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    const signature = createCartSignature(cart, signingSecret);
+    const signature = createCartSignature(cart, secret);
     const credentialMode = credentialModeFromPublishableKey(key);
-    const headerMode = parseAnteCredentialMode(req.headers.get(ANTE_KEY_MODE_HEADER));
+    const headerMode = parsePlurelCredentialMode(
+      req.headers.get(PLUREL_KEY_MODE_HEADER) ?? req.headers.get("x-ante-key-mode"),
+    );
     if (!keyModeMatches(headerMode, key)) {
-      return Response.json({ error: "Publishable key does not match x-ante-key-mode" }, { status: 400 });
+      return Response.json({ error: "Publishable key does not match x-plurel-key-mode" }, { status: 400 });
     }
     const pending = pendingFromCart(cart, credentialMode);
     if (pending) {

@@ -32,7 +32,7 @@ export function OrderConfirmation({ order, onContinueShopping }: OrderConfirmati
             <p className="mt-1 text-sm leading-relaxed text-ink-2">
               {order.confirmedVia === "sdk" ? (
                 <>
-                  Payment confirmed in Ante checkout. Fulfillment is safest after your server
+                  Payment confirmed in Plurel Pay checkout. Fulfillment is safest after your server
                   receives <code className="rounded bg-white/80 px-1 text-xs">group.funded</code>.
                 </>
               ) : (
@@ -124,13 +124,13 @@ export function OrderConfirmation({ order, onContinueShopping }: OrderConfirmati
       <p className="px-6 pb-6 text-[0.6875rem] leading-[1.55] text-ink-4">
         {order.confirmedVia === "sdk" ? (
           <>
-            Ante reported this session as funded before the webhook arrived. Configure{" "}
+            Plurel Pay reported this session as funded before the webhook arrived. Configure{" "}
             <code className="rounded bg-white/80 px-1 text-[0.625rem]">group.funded</code> on your deployment for
             production fulfillment.
           </>
         ) : (
           <>
-            This screen updated after your server verified the Ante{" "}
+            This screen updated after your server verified the Plurel Pay{" "}
             <code className="rounded bg-white/80 px-1 text-[0.625rem]">group.funded</code> webhook.
           </>
         )}

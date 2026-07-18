@@ -1,38 +1,37 @@
 /** Webhook secret resolution and signature verification (Node-safe, unit-testable). */
-import { verifyWebhookSignature } from "@splitante/sdk/signing";
+import { verifyWebhookSignature } from "@plurel/sdk/signing";
 
-import type { AnteCredentialMode } from "@/lib/ante-credential-mode";
+import type { PlurelCredentialMode } from "@/lib/ante-credential-mode";
+import { readEnv } from "@/lib/read-env";
 
-type WebhookSecretCandidate = { secret: string; mode: AnteCredentialMode };
+type WebhookSecretCandidate = { secret: string; mode: PlurelCredentialMode };
 
 function webhookSecretCandidates(): WebhookSecretCandidate[] {
   const out: WebhookSecretCandidate[] = [];
   const seen = new Set<string>();
 
-  const add = (value: string | undefined, mode: AnteCredentialMode) => {
+  const add = (value: string | undefined, mode: PlurelCredentialMode) => {
     const trimmed = value?.trim();
     if (!trimmed || seen.has(trimmed)) return;
     seen.add(trimmed);
     out.push({ secret: trimmed, mode });
   };
 
-  add(process.env.ANTE_WEBHOOK_SECRET_TEST, "sandbox");
-  add(process.env.ANTE_WEBHOOK_SECRET_LIVE, "live");
-  add(process.env.ANTE_WEBHOOK_SECRET, "live");
+  add(readEnv("PLUREL_WEBHOOK_SECRET_TEST", "ANTE_WEBHOOK_SECRET_TEST"), "sandbox");
+  add(readEnv("PLUREL_WEBHOOK_SECRET_LIVE", "ANTE_WEBHOOK_SECRET_LIVE"), "live");
+  add(readEnv("PLUREL_WEBHOOK_SECRET", "ANTE_WEBHOOK_SECRET"), "live");
 
   return out;
 }
 
-/** All configured webhook secrets — used when inbound webhooks have no mode header. */
 export function listWebhookSecrets(): string[] {
   return webhookSecretCandidates().map((candidate) => candidate.secret);
 }
 
-/** Verify signature; returns the credential mode of the secret that matched. */
-export function verifyAnteWebhookSignature(
+export function verifyPlurelWebhookSignature(
   rawBody: string,
   signatureHeader: string,
-): AnteCredentialMode | null {
+): PlurelCredentialMode | null {
   for (const candidate of webhookSecretCandidates()) {
     if (verifyWebhookSignature(rawBody, candidate.secret, signatureHeader)) {
       return candidate.mode;
@@ -40,3 +39,6 @@ export function verifyAnteWebhookSignature(
   }
   return null;
 }
+
+/** @deprecated Use verifyPlurelWebhookSignature */
+export const verifyAnteWebhookSignature = verifyPlurelWebhookSignature;

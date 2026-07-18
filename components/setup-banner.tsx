@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { modeLabel, useAnteMode } from "@/components/ante-mode-provider";
+import { modeLabel, usePlurelMode } from "@/components/plurel-mode-provider";
 
 type SetupStatus = {
   ok: boolean;
@@ -54,7 +54,7 @@ function VerifyMessage({ message }: { message: string }) {
 }
 
 export function SetupBanner() {
-  const { mode, modeHeaders } = useAnteMode();
+  const { mode, modeHeaders } = usePlurelMode();
   const [status, setStatus] = useState<SetupStatus | null>(null);
   const [verifyMessage, setVerifyMessage] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
