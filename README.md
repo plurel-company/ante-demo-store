@@ -35,7 +35,7 @@ pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), add items, and click **split with plurel**.
+Open [http://localhost:3000](http://localhost:3000), add items, and click **Split with Plurel**.
 
 ### Sandbox test card
 
@@ -99,8 +99,8 @@ See [`.env.example`](./.env.example) for commented templates including legacy `A
 This repo depends on the published npm packages:
 
 ```json
-"@plurel/sdk": "^1.0.2",
-"@plurel/react-sdk": "^1.0.2"
+"@plurel/sdk": "^1.0.3",
+"@plurel/react-sdk": "^1.0.3"
 ```
 
 ## Webhooks

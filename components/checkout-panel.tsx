@@ -337,7 +337,7 @@ export function CheckoutPanel() {
                   enableApiFallback();
                   setAutoRetry(true);
                   setStatus(
-                    "Network hiccup — retrying over a backup connection… If nothing opens, tap split with plurel again.",
+                    "Network hiccup — retrying over a backup connection… If nothing opens, tap Split with Plurel again.",
                   );
                   return;
                 }
