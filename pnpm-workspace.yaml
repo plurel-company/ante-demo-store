@@ -7,6 +7,10 @@ allowBuilds:
   esbuild: true
   sharp: true
 
+minimumReleaseAgeExclude:
+  - '@plurel/react-sdk@1.0.3'
+  - '@plurel/sdk@1.0.3'
+
 # Kept for pnpm 10.x before allowBuilds (Vercel may use 10.x by project age).
 onlyBuiltDependencies:
   - "@sentry/cli"
