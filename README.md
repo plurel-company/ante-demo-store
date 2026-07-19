@@ -35,7 +35,7 @@ pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), add items, and click **split with plurel**.
+Open [http://localhost:3000](http://localhost:3000), add items, and click **Split with Plurel**.
 
 ### Sandbox test card
 
