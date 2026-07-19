@@ -7,19 +7,26 @@ describe("resolveSiteUrl", () => {
   const previous: Record<string, string | undefined> = {};
 
   function snapshotEnv() {
-    for (const key of keys) previous[key] = process.env[key];
+    for (const key of keys) {
+      previous[key] = process.env[key];
+    }
   }
 
   function restoreEnv() {
     for (const key of keys) {
       const value = previous[key];
-      if (value === undefined) delete process.env[key];
-      else process.env[key] = value;
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
     }
   }
 
   function clearEnv() {
-    for (const key of keys) delete process.env[key];
+    for (const key of keys) {
+      delete process.env[key];
+    }
   }
 
   it("prefers NEXT_PUBLIC_SITE_URL", () => {
@@ -35,13 +42,16 @@ describe("resolveSiteUrl", () => {
     }
   });
 
-  it("uses the Vercel preview host when site URL is unset", () => {
+  it("uses VERCEL_URL on non-production when site URL is unset", () => {
     snapshotEnv();
     try {
       clearEnv();
       process.env.VERCEL_ENV = "preview";
       process.env.VERCEL_URL = "split-shop-git-preview-plurel.vercel.app";
-      assert.equal(resolveSiteUrl(), "https://split-shop-git-preview-plurel.vercel.app");
+      assert.equal(
+        resolveSiteUrl(),
+        "https://split-shop-git-preview-plurel.vercel.app",
+      );
     } finally {
       restoreEnv();
     }
