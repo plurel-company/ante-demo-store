@@ -2,16 +2,6 @@
 
 import { modeLabel, usePlurelMode } from "@/components/plurel-mode-provider";
 
-function ModeBadge({ isLive }: { isLive: boolean }) {
-  return (
-    <span
-      className={`plurel-mode-badge ${isLive ? "plurel-mode-badge--live" : "plurel-mode-badge--sandbox"}`}
-    >
-      {isLive ? "Live" : "Test"}
-    </span>
-  );
-}
-
 export function PlurelModeSwitch() {
   const { mode, setMode, hasTestKey, hasLiveKey } = usePlurelMode();
   const isLive = mode === "live";
@@ -25,7 +15,6 @@ export function PlurelModeSwitch() {
         className={`plurel-mode-label text-right ${!isLive ? "plurel-mode-label--active" : "plurel-mode-label--inactive"}`}
       >
         Test
-        {!isLive ? <ModeBadge isLive={false} /> : null}
       </span>
       <input
         type="range"
@@ -42,7 +31,6 @@ export function PlurelModeSwitch() {
         className={`plurel-mode-label ${isLive ? "plurel-mode-label--active" : "plurel-mode-label--inactive"}`}
       >
         Live
-        {isLive ? <ModeBadge isLive /> : null}
       </span>
     </div>
   );
